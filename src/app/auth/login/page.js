@@ -5,7 +5,7 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
-import { FiMail, FiLock, FiCheckCircle } from "react-icons/fi";
+import { FiMail, FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -14,20 +14,28 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const demoAccounts = [
-    { label: "Admin", role: "admin", email: "admin@medicare.com" },
-    { label: "Doctor", role: "doctor", email: "doctor@medicare.com" },
-    { label: "Staff", role: "staff", email: "staff@medicare.com" },
-    { label: "Patient", role: "patient", email: "patient@medicare.com" },
+    { label: "Admin", email: "admin@medicare.com", password: "admin123" },
+    { label: "Doctor", email: "doctor@medicare.com", password: "doctor123" },
+    { label: "Staff", email: "staff@medicare.com", password: "staff123" },
+    { label: "Patient", email: "patient@medicare.com", password: "patient123" },
   ];
 
   const handleLogin = async (e, demoData = null) => {
     e?.preventDefault();
-    setLoading(true);
-    const data = demoData || { email, password, role: "admin" };
-    await login(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError("");
+      
+      const credentials = demoData || { email, password };
+      await login(credentials);
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,6 +74,14 @@ export default function LoginPage() {
             <p className="text-sm text-slate-500 mt-1">Access your dashboard and records</p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+              <FiAlertCircle className="text-red-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-5">
             <Input
               label="Email Address"
@@ -73,8 +89,12 @@ export default function LoginPage() {
               placeholder="e.g. john@example.com"
               icon={FiMail}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
               required
+              disabled={loading}
             />
             <div className="space-y-1">
               <Input
@@ -83,15 +103,19 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 icon={FiLock}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 required
+                disabled={loading}
               />
               <div className="text-right">
                 <button type="button" className="text-xs font-bold text-[#16A34A] hover:underline">Forgot password?</button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" isLoading={loading}>
+            <Button type="submit" className="w-full" size="lg" isLoading={loading} disabled={loading}>
               Sign In to System
             </Button>
           </form>
@@ -107,9 +131,10 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-3">
               {demoAccounts.map((account) => (
                 <button
-                  key={account.role}
+                  key={account.email}
                   onClick={(e) => handleLogin(e, account)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-slate-100 text-left hover:bg-slate-50 hover:border-[#16A34A] transition-all group"
+                  disabled={loading}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-slate-100 text-left hover:bg-slate-50 hover:border-[#16A34A] transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="w-8 h-8 rounded-lg bg-green-50 text-[#16A34A] flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
                     {account.label[0]}
