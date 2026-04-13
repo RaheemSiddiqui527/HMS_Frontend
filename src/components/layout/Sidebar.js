@@ -45,7 +45,7 @@ export default function Sidebar({ items, roleName, isOpen, setIsOpen }) {
         <div className="flex items-center justify-between px-6 h-24 shrink-0 border-b border-slate-50">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-xl bg-[#16A34A] flex flex-col items-center justify-center text-white shadow-lg shadow-green-100 shrink-0">
-               <img src="/logo.png" alt="Logo" className="w-[70%] h-[70%] object-contain" />
+               <img src="/logo2.png" alt="Logo" className="w-[70%] h-[70%] object-contain" />
             </div>
             {!isCollapsed && (
               <div className="animate-fade-in whitespace-nowrap">

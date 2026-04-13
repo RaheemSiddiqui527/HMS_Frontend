@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="w-20 h-20 relative mb-4 transition-transform hover:scale-105">
             <div className="bg-[#0B5D4B] p-3 rounded-2xl shadow-xl shadow-green-200">
               <Image
-                src="/logo.png"
+                src="/logo2.png"
                 alt="SDI Healthcare Logo"
                 width={60}
                 height={60}
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
       {/* Footer Info */}
       <div className="mt-12 flex items-center gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest opacity-60">
-        <span>© 2024 MediCare Inc.</span>
+        <span>© 2026 SDI Healthcare Inc. All rights reserved.</span>
         <span>Privacy Policy</span>
         <span>Terms of Service</span>
       </div>

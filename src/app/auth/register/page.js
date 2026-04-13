@@ -20,7 +20,7 @@ export default function RegisterPage() {
   <div className="w-20 h-20 relative mb-4">
     <div className="bg-[#0B5D4B] p-3 rounded-2xl shadow-xl shadow-green-200">
       <Image
-        src="/logo.png"
+        src="/logo2.png"
         alt="SDI Healthcare Logo"
         width={60}
         height={60}
