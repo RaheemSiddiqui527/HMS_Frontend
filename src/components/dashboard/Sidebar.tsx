@@ -37,8 +37,19 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
   // Define navigation configuration mapped strictly to backend entities!
   const RoleMenus = {
      admin: [
-       { title: 'Overview', icon: <Activity className="w-5 h-5"/>, links: [ { label: 'Dashboard Stats', href: '/admin', icon: <LayoutGrid className="w-4 h-4"/> } ] },
-       { title: 'Administration', icon: <Database className="w-5 h-5"/>, links: [ { label: 'User Management', href: '/admin', icon: <Users className="w-4 h-4"/> } ] }
+       { title: 'Overview', icon: <Activity className="w-5 h-5"/>, links: [
+          { label: 'Dashboard Stats', href: '/admin', icon: <LayoutGrid className="w-4 h-4"/> },
+          { label: 'System Reports', href: '/admin/reports', icon: <FileText className="w-4 h-4"/> }
+       ]},
+       { title: 'Administration', icon: <Database className="w-5 h-5"/>, links: [
+          { label: 'User Directory', href: '/admin/users', icon: <Users className="w-4 h-4"/> },
+          { label: 'Doctors', href: '/admin/doctors', icon: <Stethoscope className="w-4 h-4"/> },
+          { label: 'Staff', href: '/admin/staff', icon: <Building2 className="w-4 h-4"/> }
+       ]},
+       { title: 'System', icon: <Settings className="w-5 h-5"/>, links: [
+          { label: 'Notifications', href: '/admin/notifications', icon: <Bell className="w-4 h-4"/> },
+          { label: 'Profile', href: '/admin/profile', icon: <Settings className="w-4 h-4"/> }
+       ] }
      ],
      doctor: [
        { title: 'Clinical', icon: <Stethoscope className="w-5 h-5"/>, links: [
@@ -49,6 +60,10 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
        { title: 'Records', icon: <Folder className="w-5 h-5"/>, links: [
           { label: 'Medical Records', href: '/doctor/records', icon: <FileText className="w-4 h-4"/> },
           { label: 'Prescriptions', href: '/doctor/prescriptions', icon: <Pill className="w-4 h-4"/> }
+       ]},
+       { title: 'Personal', icon: <User className="w-5 h-5"/>, links: [
+          { label: 'Notifications', href: '/doctor/notifications', icon: <Bell className="w-4 h-4"/> },
+          { label: 'Profile', href: '/doctor/profile', icon: <Settings className="w-4 h-4"/> }
        ]}
      ],
      staff: [
@@ -58,17 +73,23 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
           { label: 'Patient Directory', href: '/staff/patients', icon: <Users className="w-4 h-4"/> }
        ]},
        { title: 'Management', icon: <FileBox className="w-5 h-5"/>, links: [
-          { label: 'System Reports', href: '/staff/reports', icon: <FileText className="w-4 h-4"/> }
+          { label: 'System Reports', href: '/staff/reports', icon: <FileText className="w-4 h-4"/> },
+          { label: 'Notifications', href: '/staff/notifications', icon: <Bell className="w-4 h-4"/> },
+          { label: 'Profile', href: '/staff/profile', icon: <Settings className="w-4 h-4"/> }
        ]}
      ],
      patient: [
-       { title: 'My Details', icon: <User className="w-5 h-5"/>, links: [
-          { label: 'Dashboard Overview', href: '/patient', icon: <LayoutGrid className="w-4 h-4"/> },
+       { title: 'My Portal', icon: <User className="w-5 h-5"/>, links: [
+          { label: 'Dashboard', href: '/patient', icon: <LayoutGrid className="w-4 h-4"/> },
           { label: 'My Appointments', href: '/patient/appointments', icon: <Calendar className="w-4 h-4"/> },
        ]},
        { title: 'Health Logs', icon: <Activity className="w-5 h-5"/>, links: [
-          { label: 'My Medical Records', href: '/patient/records', icon: <FileText className="w-4 h-4"/> },
-          { label: 'My Prescriptions', href: '/patient/prescriptions', icon: <Pill className="w-4 h-4"/> }
+          { label: 'Medical Records', href: '/patient/records', icon: <FileText className="w-4 h-4"/> },
+          { label: 'Prescriptions', href: '/patient/prescriptions', icon: <Pill className="w-4 h-4"/> }
+       ]},
+       { title: 'Settings', icon: <Settings className="w-5 h-5"/>, links: [
+          { label: 'Notifications', href: '/patient/notifications', icon: <Bell className="w-4 h-4"/> },
+          { label: 'Profile', href: '/patient/profile', icon: <Settings className="w-4 h-4"/> }
        ]}
      ]
   };
@@ -78,35 +99,12 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
   return (
     <div className={`fixed inset-y-0 left-0 z-50 flex h-full transform transition-transform duration-300 md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 
-      {/* Primary Thin Sidebar */}
-      <div className="w-20 bg-white border-r border-slate-200 flex flex-col items-center py-6 h-full gap-8 relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="w-11 h-11 bg-primary-700 rounded-[14px] flex items-center justify-center text-white mb-2 shadow-sm cursor-pointer hover:bg-primary-800 transition-colors shrink-0">
-           <Activity className="w-6 h-6" />
-        </div>
-
-        <div className="flex flex-col gap-4 w-full px-4 items-center flex-1 overflow-y-auto no-scrollbar py-2">
-           {currentMenu.map((group, idx) => (
-             <PrimaryIcon key={idx} icon={group.icon} active={pathname === group.links[0].href} />
-           ))}
-        </div>
-
-        <div className="mt-auto flex flex-col gap-4 w-full px-4 items-center shrink-0">
-           <div className="relative mt-2">
-             <PrimaryIcon icon={<Bell className="w-5 h-5"/>} active={false} />
-             {/* Notification dot placeholder if needed */}
-           </div>
-           <PrimaryIcon icon={<Settings className="w-5 h-5"/>} active={pathname.includes('/settings')} />
-           <div className="mt-4 pt-4 border-t border-slate-100 w-full flex justify-center">
-             <button onClick={handleLogout} className="w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer transition-all text-red-500 hover:bg-red-50 hover:text-red-600">
-                <LogOut className="w-5 h-5" />
-             </button>
-           </div>
-        </div>
-      </div>
-
-      {/* Secondary Wide Sidebar */}
-      <div className="w-64 lg:w-72 bg-[#fafafa] border-r border-slate-200 h-full flex flex-col relative z-10 shrink-0">
-         <div className="h-20 flex items-center px-6 border-b border-slate-200 shrink-0 relative bg-white md:bg-transparent">
+      {/* Consolidated Unified Sidebar */}
+      <div className="w-64 lg:w-72 bg-white border-r border-slate-200 h-full flex flex-col relative z-20 shrink-0 shadow-sm">
+         <div className="h-20 flex items-center px-6 border-b border-slate-200 shrink-0 relative bg-white">
+            <div className="w-8 h-8 bg-primary-700 rounded-lg flex items-center justify-center text-white mr-3 shadow-sm shrink-0">
+               <Activity className="w-5 h-5" />
+            </div>
             <span className="font-black text-xl tracking-tight text-slate-800 flex items-center gap-1.5">
                SDI Care <sup className="text-[10px] font-bold text-slate-400 mt-1">®</sup>
             </span>
@@ -128,56 +126,61 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
             </div>
          </div>
 
-         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
+         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 pt-4">
             {currentMenu.map((group, gIdx) => (
                <div key={gIdx} className="mb-2">
-                 <NavGroup title={group.title} hasArrow={false}/>
-                 <div className="space-y-1 pl-4 relative border-l border-slate-200 ml-5 py-1">
-                    {group.links.map((link, lIdx) => (
-                       <SubNavItem
-                          key={lIdx}
-                          label={link.label}
-                          href={link.href}
-                          active={pathname === link.href}
-                       />
-                    ))}
+                 <NavGroup title={group.title} hasArrow={false} icon={group.icon} />
+                 <div className="space-y-1 pl-4 relative border-l border-slate-100 ml-[22px] py-1 mt-1">
+                    {group.links.map((link, lIdx) => {
+                       // Custom active checking, handling base paths properly without highlighting everything
+                       const isActive = pathname === link.href || (pathname.startsWith(link.href + '/') && link.href.split('/').length > 2);
+                       return (
+                          <SubNavItem
+                             key={lIdx}
+                             label={link.label}
+                             href={link.href}
+                             active={isActive}
+                             icon={link.icon}
+                          />
+                       )
+                    })}
                  </div>
                </div>
             ))}
          </div>
+
+         {/* Bottom Action Bar */}
+         <div className="p-4 border-t border-slate-200 shrink-0">
+            <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors font-bold text-[13px]">
+               <LogOut className="w-4 h-4" />
+               Log Out Securely
+            </button>
+         </div>
       </div>
-
     </div>
   );
 }
 
-function PrimaryIcon({ icon, active }: { icon: React.ReactNode, active: boolean }) {
+function NavGroup({ title, hasArrow, icon }: { title: string, hasArrow: boolean, icon?: React.ReactNode }) {
   return (
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
-      active ? 'bg-primary-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-800'
-    }`}>
-      {icon}
+    <div className="flex items-center justify-between text-[13px] font-bold text-slate-800 px-3 py-2 rounded-lg group">
+       <div className="flex items-center gap-3">
+         {icon && <div className="text-slate-400 group-hover:text-primary-600 transition-colors flex items-center justify-center w-6">{icon}</div>}
+         <span>{title}</span>
+       </div>
+       {hasArrow && <ChevronRight className="w-4 h-4 text-slate-400" />}
     </div>
   );
 }
 
-function NavGroup({ title, hasArrow }: { title: string, hasArrow: boolean }) {
+function SubNavItem({ label, href, active, icon }: { label: string, href: string, active: boolean, icon?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between text-[13px] font-bold text-slate-800 cursor-pointer px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors mb-1 group">
-       <span>{title}</span>
-       {hasArrow && <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />}
-    </div>
-  );
-}
-
-function SubNavItem({ label, href, active }: { label: string, href: string, active: boolean }) {
-  return (
-    <Link href={href} className="relative flex items-center">
-       {/* Active dot indicator on the line */}
+    <Link href={href} className="relative flex items-center group">
        {active && <div className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-2 h-2 bg-primary-500 rounded-full border-2 border-white"></div>}
-       <div className={`block px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors w-full ${
+       <div className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold rounded-lg transition-colors w-full ${
          active ? 'text-primary-700 bg-primary-50/50' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
        }`}>
+         {icon && <span className={active ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600 transition-colors"}>{icon}</span>}
          {label}
        </div>
     </Link>
