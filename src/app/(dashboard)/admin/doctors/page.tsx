@@ -173,7 +173,8 @@ export default function AdminDoctorsPage() {
 function AddDoctorModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [formData, setFormData] = useState({
       firstName: '', lastName: '', email: '', password: '',
-      specialization: '', licenseNumber: '', phoneNumber: ''
+      specialization: '', licenseNumber: '', phoneNumber: '',
+      yearsOfExperience: 0, consultationFee: 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -255,6 +256,19 @@ function AddDoctorModal({ onClose, onSuccess }: { onClose: () => void, onSuccess
                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">License No.</label>
                  <input required className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500 font-bold text-slate-800"
                    value={formData.licenseNumber} onChange={e => setFormData({...formData, licenseNumber: e.target.value})} />
+               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+               <div>
+                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Experience (Years)</label>
+                 <input type="number" required min={0} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500 font-bold text-slate-800"
+                   value={formData.yearsOfExperience} onChange={e => setFormData({...formData, yearsOfExperience: parseInt(e.target.value) || 0})} />
+               </div>
+               <div>
+                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Consultation Fee</label>
+                 <input type="number" required min={0} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500 font-bold text-slate-800"
+                   value={formData.consultationFee} onChange={e => setFormData({...formData, consultationFee: parseInt(e.target.value) || 0})} />
                </div>
             </div>
 

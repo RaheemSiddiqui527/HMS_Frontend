@@ -8,10 +8,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Left side Form Area */}
       <div className="flex-1 bg-white rounded-3xl lg:rounded-[2rem] shadow-sm flex flex-col relative overflow-y-auto w-full lg:max-w-[45%] z-10 border border-slate-100">
 
-        {/* Minimal Header */}
         <div className="absolute top-6 left-8 flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center text-white">
-               <Activity className="w-4 h-4" />
+            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center border border-primary-500/20">
+               <img src="/logo2.png" alt="SDI Logo" className="w-5 h-5 object-contain brightness-0 invert" />
             </div>
             <span className="font-extrabold text-[15px] tracking-tight text-slate-800">SDI Health Care</span>
         </div>
@@ -105,10 +104,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
          </div>
 
-         {/* Callout Info Section */}
          <div className="relative z-10 text-center mt-4 px-12 mb-16">
-            <div className="w-12 h-12 bg-white/10 rounded-2xl mx-auto mb-6 flex items-center justify-center border border-white/10">
-               <Activity className="w-6 h-6 text-emerald-400" />
+            <div className="w-14 h-14 bg-white/10 rounded-2xl mx-auto mb-6 flex items-center justify-center border border-white/10 backdrop-blur-sm">
+               <img src="/logo2.png" alt="Institutional Logo" className="w-8 h-8 object-contain" />
             </div>
             <h2 className="text-[32px] font-black text-white mb-4 text-balance leading-tight tracking-tight">
                A Unified Hub for Smarter <br/>Healthcare Decision-Making

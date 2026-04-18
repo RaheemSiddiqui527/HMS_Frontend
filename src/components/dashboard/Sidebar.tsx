@@ -102,11 +102,11 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
       {/* Consolidated Unified Sidebar */}
       <div className="w-64 lg:w-72 bg-white border-r border-slate-200 h-full flex flex-col relative z-20 shrink-0 shadow-sm">
          <div className="h-20 flex items-center px-6 border-b border-slate-200 shrink-0 relative bg-white">
-            <div className="w-8 h-8 bg-primary-700 rounded-lg flex items-center justify-center text-white mr-3 shadow-sm shrink-0">
-               <Activity className="w-5 h-5" />
+            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center mr-3 shadow-md shadow-primary-100 shrink-0 border border-primary-500/20">
+               <img src="/logo2.png" alt="SDI Logo" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
-            <span className="font-black text-xl tracking-tight text-slate-800 flex items-center gap-1.5">
-               SDI Care <sup className="text-[10px] font-bold text-slate-400 mt-1">®</sup>
+            <span className="font-black text-xl tracking-tight text-slate-900 flex items-center gap-1">
+               SDI <span className="text-primary-600">Care</span> <sup className="text-[10px] font-bold text-slate-400 mt-1">®</sup>
             </span>
             <button className="md:hidden absolute right-4 p-2 text-slate-500 rounded-md hover:bg-slate-200" onClick={() => setIsOpen(false)}>
                <X className="w-5 h-5"/>

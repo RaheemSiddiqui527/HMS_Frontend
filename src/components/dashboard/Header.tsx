@@ -1,9 +1,37 @@
 "use client";
 import React from 'react';
 import { Menu, Search, Download, ChevronDown, Edit2, User } from 'lucide-react';
-import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
+  const pathname = usePathname();
+
+  // Dynamic Content Mapping
+  const getHeaderInfo = () => {
+    const segments = pathname.split('/').filter(Boolean);
+    const lastSegment = segments[segments.length - 1];
+
+    const mapping: Record<string, { title: string, breadcrumb: string }> = {
+      'admin': { title: 'System Analytics', breadcrumb: 'System > Intelligence' },
+      'users': { title: 'User Directory', breadcrumb: 'Admin > Users' },
+      'doctors': { title: 'Medical Staff', breadcrumb: 'Admin > Doctors' },
+      'staff': { title: 'Operational Staff', breadcrumb: 'Admin > Staff' },
+      'reports': { title: 'System Metrics', breadcrumb: 'Performance > Reports' },
+      'doctor': { title: 'Clinical Dashboard', breadcrumb: 'Doctor > Intelligence' },
+      'appointments': { title: 'Clinical Schedule', breadcrumb: 'Doctor > Care' },
+      'patients': { title: 'Patient Directory', breadcrumb: 'Records > Patients' },
+      'records': { title: 'Medical Repository', breadcrumb: 'Records > History' },
+      'prescriptions': { title: 'Pharmacy Orders', breadcrumb: 'Care > Prescriptions' },
+      'notifications': { title: 'Professional Alerts', breadcrumb: 'System > Stream' },
+      'profile': { title: 'Professional Identity', breadcrumb: 'Security > Profile' },
+      'patient': { title: 'My Portal', breadcrumb: 'Care > Overview' },
+    };
+
+    return mapping[lastSegment] || { title: 'HMS Dashboard', breadcrumb: 'Access > Global' };
+  };
+
+  const info = getHeaderInfo();
+
   return (
     <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10 shrink-0">
        <div className="flex items-center gap-4">
@@ -12,9 +40,9 @@ export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
           </button>
 
           <div className="hidden sm:flex flex-col">
-             <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Calendar &gt; Appointments &gt; Appointments Manager</div>
+             <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{info.breadcrumb}</div>
              <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                Appointments Manager <Edit2 className="w-4 h-4 text-slate-400 ml-1 cursor-pointer hover:text-primary-600 transition-colors" />
+                {info.title} <Edit2 className="w-4 h-4 text-slate-400 ml-1 cursor-pointer hover:text-primary-600 transition-colors" />
              </h1>
           </div>
        </div>

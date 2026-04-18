@@ -172,7 +172,8 @@ export default function AdminStaffPage() {
 function AddStaffModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [formData, setFormData] = useState({
       firstName: '', lastName: '', email: '', password: '',
-      designation: '', department: '', phoneNumber: ''
+      designation: '', department: '', phoneNumber: '',
+      shift: 'morning'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -232,7 +233,7 @@ function AddStaffModal({ onClose, onSuccess }: { onClose: () => void, onSuccess:
                  value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-4">
                <div>
                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Designation</label>
                  <select required className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-purple-500 font-bold text-slate-800 bg-white"
@@ -262,6 +263,16 @@ function AddStaffModal({ onClose, onSuccess }: { onClose: () => void, onSuccess:
                      <option value="Management">Management</option>
                  </select>
                </div>
+            </div>
+
+            <div className="mb-6">
+               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Working Shift</label>
+               <select required className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-purple-500 font-bold text-slate-800 bg-white"
+                 value={formData.shift} onChange={e => setFormData({...formData, shift: e.target.value})}>
+                  <option value="morning">Morning Shift</option>
+                  <option value="afternoon">Afternoon Shift</option>
+                  <option value="night">Night Shift</option>
+               </select>
             </div>
 
             <button disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black text-sm py-3 rounded-lg transition-colors shadow-sm">

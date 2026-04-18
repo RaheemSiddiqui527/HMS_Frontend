@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Eye, EyeOff, Lock, Mail, User, Shield, AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
 import { authService } from '../../../services/auth.service';
 
 // Form Validation Schemas using Yup
@@ -21,15 +22,37 @@ const signupSchema = yup.object().shape({
 });
 
 export default function UnifiedAuthPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px] text-slate-400 font-bold italic">Synchronizing Secure Portal...</div>}>
+       <AuthContent />
+    </Suspense>
+  );
+}
+
+function AuthContent() {
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'signup') {
+      setIsLoginMode(false);
+    }
+  }, [searchParams]);
 
   return (
     <div className="w-full max-w-[400px] flex flex-col items-center">
 
+      {/* Institutional Branding */}
+      {/* <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-primary-100 border-2 border-primary-500/20">
+         <img src="/logo2.png" alt="SDI Logo" className="w-10 h-10 object-contain brightness-0 invert" />
+      </div> */}
+
       {/* Header Context */}
-      <h1 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">Welcome to SDI Care</h1>
+      <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">SDI Health Care</h1>
       <p className="text-sm font-bold text-slate-400 mb-8 max-w-[280px] text-center leading-relaxed">
-         Start your experience with SDI Health Care by signing in or signing up.
+         Institutional Access Portal<br />
+         <span className="text-[10px] uppercase tracking-widest text-primary-500/60 mt-2 block italic">Authenticated Session Required</span>
       </p>
 
       {/* Dynamic Toggle Control */}
@@ -111,8 +134,18 @@ function LoginForm() {
       // Persist token to satisfy the Dashboard auth guard
       localStorage.setItem('token', response.data.token);
 
-      // Route user strictly assuming admin layout for now as dummy
-      router.push('/admin');
+      // Decode role from token to redirect properly
+      const payload = JSON.parse(atob(response.data.token.split('.')[1]));
+      const role = payload.role;
+
+      const roleRoutes: Record<string, string> = {
+        admin: '/admin',
+        doctor: '/doctor',
+        staff: '/staff',
+        patient: '/patient'
+      };
+
+      router.push(roleRoutes[role] || '/admin');
     } catch (err: any) {
       setApiError(err.message || 'Verification failed. Please try again.');
     }

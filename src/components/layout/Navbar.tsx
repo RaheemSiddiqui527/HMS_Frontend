@@ -36,8 +36,8 @@ export function Navbar() {
           {/* Logo Section */}
           <div className="flex items-center shrink-0 cursor-pointer">
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative w-10 h-10 flex items-center justify-center shrink-0 overflow-hidden rounded-lg">
-                <Image src="/logo.png" alt="SDI Health Care Logo" fill className="object-contain" sizes="40px" priority />
+              <div className="w-10 h-10 bg-[#16a34a] rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-[#15803d]/20">
+                <img src="/logo2.png" alt="SDI Logo" className="w-6 h-6 object-contain brightness-0 invert" />
               </div>
               <span className="font-extrabold text-2xl tracking-tight text-slate-900 hidden sm:block">SDI Health Care</span>
             </Link>
@@ -53,10 +53,10 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/staff/login" className="text-[15px] font-bold text-primary-700 hover:text-primary-800 transition-colors">
+            <Link href="/login" className="text-[15px] font-bold text-primary-700 hover:text-primary-800 transition-colors">
               Sign In
             </Link>
-            <Link href="/admin/login" className="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-[15px] font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+            <Link href="/login?mode=signup" className="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-[15px] font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
               Get Started
             </Link>
           </div>
@@ -101,10 +101,10 @@ export function Navbar() {
           </Link>
 
           <div className="border-t border-slate-100 mt-6 pt-6 flex flex-col gap-3">
-            <Link href="/staff/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-4 py-3.5 rounded-xl text-base font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors">
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-4 py-3.5 rounded-xl text-base font-bold text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors">
               Sign In
             </Link>
-            <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-4 py-3.5 border border-transparent rounded-xl text-base font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm">
+            <Link href="/login?mode=signup" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-4 py-3.5 border border-transparent rounded-xl text-base font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm">
               Get Started
             </Link>
           </div>

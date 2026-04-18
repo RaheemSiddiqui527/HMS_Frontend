@@ -33,5 +33,19 @@ export const authService = {
       throw new Error(data.message || "Failed to register");
     }
     return data;
+  },
+
+  /**
+   * Helper to decode current user from token
+   */
+  getCurrentUser() {
+    if (typeof window === 'undefined') return null;
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
   }
 };
