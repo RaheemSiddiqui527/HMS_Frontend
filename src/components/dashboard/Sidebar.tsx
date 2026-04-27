@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { authService } from '@/services/auth.service';
 
 export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (val: boolean) => void }) {
   const [role, setRole] = useState<string>('');
@@ -29,8 +30,8 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
     }
   }, []);
 
-  const handleLogout = () => {
-     localStorage.removeItem('token');
+  const handleLogout = async () => {
+     await authService.logout();
      router.push('/login');
   };
 
@@ -70,6 +71,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
        { title: 'Operations', icon: <Building2 className="w-5 h-5"/>, links: [
           { label: 'Dashboard', href: '/staff', icon: <LayoutGrid className="w-4 h-4"/> },
           { label: 'Appointments Registry', href: '/staff/appointments', icon: <Calendar className="w-4 h-4"/> },
+          { label: 'Doctor Schedules', href: '/staff/doctor-schedule', icon: <Stethoscope className="w-4 h-4"/> },
           { label: 'Patient Directory', href: '/staff/patients', icon: <Users className="w-4 h-4"/> }
        ]},
        { title: 'Management', icon: <FileBox className="w-5 h-5"/>, links: [
@@ -82,6 +84,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
        { title: 'My Portal', icon: <User className="w-5 h-5"/>, links: [
           { label: 'Dashboard', href: '/patient', icon: <LayoutGrid className="w-4 h-4"/> },
           { label: 'My Appointments', href: '/patient/appointments', icon: <Calendar className="w-4 h-4"/> },
+          { label: 'Book Appointment', href: '/patient/book-appointment', icon: <Plus className="w-4 h-4"/> },
        ]},
        { title: 'Health Logs', icon: <Activity className="w-5 h-5"/>, links: [
           { label: 'Medical Records', href: '/patient/records', icon: <FileText className="w-4 h-4"/> },

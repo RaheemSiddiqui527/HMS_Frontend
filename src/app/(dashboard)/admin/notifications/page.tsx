@@ -13,7 +13,10 @@ export default function AdminNotificationsPage() {
     try {
       setIsLoading(true);
       const data = await notificationService.getAllNotifications({ type: filter === 'all' ? '' : filter });
-      setNotifications(data.data || []);
+      const notificationsArray = Array.isArray(data.data?.notifications) 
+        ? data.data.notifications 
+        : (Array.isArray(data.data) ? data.data : []);
+      setNotifications(notificationsArray);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -83,7 +86,7 @@ export default function AdminNotificationsPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-100 bg-white">
-               {notifications.map((notif: any) => (
+               {notifications?.map((notif: any) => (
                  <div key={notif._id} className="p-4 hover:bg-slate-50/50 transition-colors flex gap-4">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                        notif.type === 'broadcast' ? 'bg-blue-50 text-blue-600' :

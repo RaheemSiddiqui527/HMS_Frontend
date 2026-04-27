@@ -14,10 +14,21 @@ export const appointmentService = {
   },
 
   /**
+   * Get all available doctors for booking
+   */
+  async getDoctors(params: any = {}) {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${API_URL}/appointments/doctors?${query}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  /**
    * Create a new appointment
    */
   async createAppointment(appointmentData: any) {
-    const res = await fetch(`${API_URL}/appointments`, {
+    const res = await fetch(`${API_URL}/appointments/book`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(appointmentData),

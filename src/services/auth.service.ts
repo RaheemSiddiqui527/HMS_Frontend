@@ -47,5 +47,60 @@ export const authService = {
     } catch (e) {
       return null;
     }
+  },
+
+  async logout() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await fetch(`${API_URL}/auth/logout`, {
+          method: "POST",
+          headers: { 
+            "Authorization": `Bearer ${token}`
+          },
+        });
+      } catch (e) {
+        console.error("Failed to revoke session on server", e);
+      }
+    }
+    localStorage.removeItem('token');
+  },
+
+  async getSessions() {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_URL}/auth/sessions`, {
+      headers: { 
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch sessions");
+    return data.data;
+  },
+
+  async revokeSession(sessionId: string) {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_URL}/auth/sessions/${sessionId}`, {
+      method: "DELETE",
+      headers: { 
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to revoke session");
+    return data;
+  },
+
+  async revokeAllOtherSessions() {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_URL}/auth/sessions`, {
+      method: "DELETE",
+      headers: { 
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to revoke other sessions");
+    return data;
   }
 };
