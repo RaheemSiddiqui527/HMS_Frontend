@@ -284,9 +284,67 @@ function RecordsContent() {
 
 function ViewRecordModal({ record, onClose }: { record: any, onClose: () => void }) {
   const [isSharing, setIsSharing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const handlePrint = () => {
-    window.print();
+  const handleGeneratePdf = async () => {
+    try {
+      setIsGenerating(true);
+      const element = document.getElementById('printable-record');
+      if (!element) {
+          alert("Printable element not found");
+          return;
+      }
+      
+      // Briefly show it off-screen to render
+      element.classList.remove('hidden');
+      element.classList.remove('print:block');
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '0';
+      element.style.display = 'block';
+
+      // Use html2canvas-pro to support modern Tailwind v4 colors like lab() and oklch()
+      const html2canvas = (await import('html2canvas-pro')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'letter'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Add a slight margin (0.5 inch)
+      const margin = 0.5;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'JPEG', margin, margin, contentWidth, contentHeight);
+      
+      const pdfBlob = pdf.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. See console for details.');
+    } finally {
+      const element = document.getElementById('printable-record');
+      if (element) {
+        element.style.position = '';
+        element.style.left = '';
+        element.style.top = '';
+        element.style.display = '';
+        element.classList.add('hidden');
+        element.classList.add('print:block');
+      }
+      setIsGenerating(false);
+    }
   };
 
   const handleShare = async () => {
@@ -364,10 +422,11 @@ function ViewRecordModal({ record, onClose }: { record: any, onClose: () => void
 
         <div className="p-6 md:p-10 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center gap-4">
            <button 
-             onClick={handlePrint}
+             disabled={isGenerating}
+             onClick={handleGeneratePdf}
              className="w-full md:flex-1 py-4 rounded-2xl border border-slate-200 bg-white text-slate-600 font-black text-xs hover:bg-slate-50 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
            >
-              <Printer className="w-4 h-4" /> Download PDF
+              <Printer className="w-4 h-4" /> {isGenerating ? 'Generating...' : 'Download PDF'}
            </button>
            <button 
              disabled={isSharing}
@@ -378,6 +437,44 @@ function ViewRecordModal({ record, onClose }: { record: any, onClose: () => void
            </button>
         </div>
       </div>
+
+      {/* PDF Viewer Modal */}
+      {pdfUrl && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-[2rem] w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                            <Printer className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-slate-800 text-lg">Document Preview</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verify before downloading</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <a 
+                            href={pdfUrl} 
+                            download={`MedicalRecord-${record._id?.slice(-6) || 'Doc'}.pdf`}
+                            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-2"
+                        >
+                            <Download className="w-4 h-4" /> Save PDF
+                        </a>
+                        <button 
+                            onClick={() => {
+                                URL.revokeObjectURL(pdfUrl);
+                                setPdfUrl(null);
+                            }} 
+                            className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors"
+                        >
+                            <X className="w-5 h-5"/>
+                        </button>
+                    </div>
+                </div>
+                <iframe src={pdfUrl} className="flex-1 w-full bg-slate-100" title="PDF Preview" />
+            </div>
+        </div>
+      )}
     </div>
   );
 }

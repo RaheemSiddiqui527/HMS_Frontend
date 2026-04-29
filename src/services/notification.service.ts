@@ -1,36 +1,23 @@
-import { API_URL } from './auth.service';
-import { getAuthHeaders, handleResponse } from './api.utils';
+import api from './api';
 
 export const notificationService = {
   async getNotifications(params: any = {}) {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${API_URL}/notifications/list?${query}`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.get('/notifications/list', { params });
+    return response.data;
   },
 
   async markAsRead(notificationId: string) {
-    const res = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.patch(`/notifications/${notificationId}/read`);
+    return response.data;
   },
 
   async markAllAsRead() {
-    const res = await fetch(`${API_URL}/notifications/read-all`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.patch('/notifications/read-all');
+    return response.data;
   },
 
   async deleteNotification(notificationId: string) {
-    const res = await fetch(`${API_URL}/notifications/${notificationId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/notifications/${notificationId}`);
+    return response.data;
   },
 };

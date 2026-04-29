@@ -71,7 +71,19 @@ export function Header({ onMenuToggle }: { onMenuToggle: () => void }) {
 
           {/* Main Action buttons */}
           <div className="flex shadow-sm rounded-lg overflow-hidden">
-             <button className="bg-primary-700 hover:bg-primary-800 text-white font-bold text-sm px-4 py-2.5 flex items-center gap-2 transition-colors border-r border-primary-800/50">
+             <button 
+                onClick={() => {
+                   const csvContent = "data:text/csv;charset=utf-8,Record_ID,Date,Information\n1," + new Date().toLocaleDateString() + ",Sample Data Export\n";
+                   const encodedUri = encodeURI(csvContent);
+                   const link = document.createElement("a");
+                   link.setAttribute("href", encodedUri);
+                   link.setAttribute("download", `${info.title.replace(/\\s+/g, '_')}_Export.csv`);
+                   document.body.appendChild(link);
+                   link.click();
+                   document.body.removeChild(link);
+                }}
+                className="bg-primary-700 hover:bg-primary-800 text-white font-bold text-sm px-4 py-2.5 flex items-center gap-2 transition-colors border-r border-primary-800/50"
+             >
                <Download className="w-4 h-4 hidden sm:block" /> Export Data
              </button>
              <button className="bg-primary-700 hover:bg-primary-800 text-white px-2 py-2.5 transition-colors">

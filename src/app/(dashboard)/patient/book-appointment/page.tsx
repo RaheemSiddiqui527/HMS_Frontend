@@ -7,8 +7,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { appointmentService } from '../../../../services/appointment.service';
 import { authService } from '../../../../services/auth.service';
-import { API_URL } from '../../../../services/auth.service';
-import { getAuthHeaders } from '../../../../services/api.utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Doctor {
@@ -123,9 +121,8 @@ export default function BookAppointmentPage() {
     setSlots([]);
     setSelectedSlot('');
     try {
-      const res = await fetch(`${API_URL}/appointments/availability/check?doctorId=${doctorId}&date=${date}`, { headers: getAuthHeaders() });
-      const data = await res.json();
-      setSlots(data?.data?.availableSlots ?? []);
+      const res = await appointmentService.checkAvailability(doctorId, date);
+      setSlots(res?.data?.availableSlots ?? []);
     } catch { setSlots([]); }
     finally { setLoadingSlots(false); }
   }, []);

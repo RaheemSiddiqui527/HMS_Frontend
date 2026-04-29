@@ -76,6 +76,7 @@ export default function PatientDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'appointments' | 'prescriptions' | 'notifications'>('appointments');
   const [notifPanel, setNotifPanel] = useState(false);
@@ -88,10 +89,11 @@ export default function PatientDashboardPage() {
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [appRes, prescRes, notifRes] = await Promise.allSettled([
+      const [appRes, prescRes, notifRes, profileRes] = await Promise.allSettled([
         appointmentService.getAppointments(),
         medicalService.getPrescriptions({ limit: 20 }),
         notificationService.getNotifications({ limit: 20 }),
+        authService.getProfile(),
       ]);
 
       if (appRes.status === 'fulfilled') {
@@ -105,6 +107,9 @@ export default function PatientDashboardPage() {
       if (notifRes.status === 'fulfilled') {
         const d = notifRes.value?.data;
         setNotifications(toArray(d?.notifications ?? d));
+      }
+      if (profileRes.status === 'fulfilled') {
+        setUserProfile(profileRes.value?.data);
       }
     } finally {
       setIsLoading(false);
@@ -317,8 +322,21 @@ export default function PatientDashboardPage() {
             <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
               <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5">Health Summary</h3>
               <div className="space-y-4">
-                <SidebarStat icon={<Heart className="w-4 h-4 text-rose-400" />} label="Blood Type" value="—" />
-                <SidebarStat icon={<Activity className="w-4 h-4 text-slate-400" />} label="Last Visit" value={appointments.find(a => a.status === 'completed') ? new Date(appointments.find(a => a.status === 'completed')!.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—'} />
+                <SidebarStat 
+                  icon={<Heart className="w-4 h-4 text-rose-400" />} 
+                  label="Blood Type" 
+                  value={userProfile?.bloodType || user?.bloodType || "—"} 
+                />
+                <SidebarStat 
+                  icon={<Activity className="w-4 h-4 text-slate-400" />} 
+                  label="Last Visit" 
+                  value={(() => {
+                    const completed = appointments
+                      .filter(a => a.status === 'completed')
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    return completed[0] ? new Date(completed[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—';
+                  })()} 
+                />
                 <SidebarStat icon={<Pill className="w-4 h-4 text-slate-400" />} label="Active Meds" value={`${prescriptions.filter(p => p.status === 'active').length}`} />
                 <SidebarStat icon={<FileText className="w-4 h-4 text-slate-400" />} label="Total Records" value={`${appointments.length}`} />
               </div>

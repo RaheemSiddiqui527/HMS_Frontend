@@ -5,8 +5,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, RefreshCw, User
 } from 'lucide-react';
 import { appointmentService } from '../../../../services/appointment.service';
-import { API_URL } from '../../../../services/auth.service';
-import { getAuthHeaders } from '../../../../services/api.utils';
+import { adminService } from '../../../../services/admin.service';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface Doctor {
@@ -61,14 +60,13 @@ export default function StaffDoctorSchedulePage() {
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [doctorsLoaded, setDoctorsLoaded] = useState(false);
 
-  // ── Load doctors (from admin route accessible to staff via admin.route.js)
+  // ── Load doctors
   const loadDoctors = useCallback(async () => {
     if (doctorsLoaded) return;
     setLoadingDoctors(true);
     try {
-      const res = await fetch(`${API_URL}/admin/users?role=doctor&limit=100`, { headers: getAuthHeaders() });
-      const data = await res.json();
-      const arr = data?.data?.users ?? data?.data ?? [];
+      const res = await adminService.getAllUsers({ role: 'doctor', limit: 100 });
+      const arr = res?.data?.users ?? res?.data ?? [];
       const docList = Array.isArray(arr) ? arr.filter((u: any) => u.role === 'doctor') : [];
       setDoctors(docList);
       setDoctorsLoaded(true);
@@ -83,9 +81,8 @@ export default function StaffDoctorSchedulePage() {
   const loadSchedule = useCallback(async (doctorId: string, date: string) => {
     setLoadingSchedule(true);
     try {
-      const res = await fetch(`${API_URL}/appointments/schedule?doctorId=${doctorId}&date=${date}`, { headers: getAuthHeaders() });
-      const data = await res.json();
-      const appts = data?.data?.appointments ?? [];
+      const res = await appointmentService.getSchedule(doctorId, date);
+      const appts = res?.data?.appointments ?? [];
       setSchedule(Array.isArray(appts) ? appts : []);
     } catch (e) {
       console.error('Failed to load schedule', e);
