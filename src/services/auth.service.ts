@@ -11,6 +11,11 @@ export const authService = {
     return response.data;
   },
 
+  async socialLogin(socialData: { email: string, firstName: string, lastName: string, provider: string, providerId: string, role?: string }) {
+    const response = await api.post('/auth/social-login', socialData);
+    return response.data;
+  },
+
   /**
    * Unified Registration handler communicating with the backend register POST route.
    */
