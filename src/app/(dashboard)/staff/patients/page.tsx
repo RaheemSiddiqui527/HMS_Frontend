@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Users, Search, Mail, Phone, Eye, X, RefreshCw, Calendar } from 'lucide-react';
 import { appointmentService } from '../../../../services/appointment.service';
+import { adminService } from '../../../../services/admin.service';
 
 interface Patient {
   _id: string; firstName: string; lastName: string;
@@ -17,18 +18,11 @@ export default function StaffPatientsPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Staff can see all patients via appointments
-      const res = await appointmentService.getAppointments({ limit: 500 });
+      // Fetch all users with role 'patient'
+      const res = await adminService.getAllUsers({ role: 'patient', limit: 1000 });
       const d = res?.data;
-      const appts = Array.isArray(d?.appointments) ? d.appointments : Array.isArray(d) ? d : [];
-      // Extract unique patients
-      const patientMap = new Map<string, Patient>();
-      appts.forEach((a: any) => {
-        if (a.patientId && a.patientId._id) {
-          patientMap.set(a.patientId._id, a.patientId);
-        }
-      });
-      setPatients(Array.from(patientMap.values()));
+      const patientList = Array.isArray(d?.users) ? d.users : Array.isArray(d) ? d : [];
+      setPatients(patientList);
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
   }, []);
@@ -142,6 +136,14 @@ export default function StaffPatientsPage() {
                   </div>
                 </div>
               ))}
+              <button 
+                onClick={() => {
+                  window.location.href = '/staff/appointments?openBooking=true&patientId=' + selected._id;
+                }}
+                className="w-full bg-[#185d51] hover:bg-[#124a40] text-white font-black text-xs uppercase tracking-[0.2em] py-4 rounded-2xl shadow-xl shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 mt-4"
+              >
+                <Calendar className="w-4 h-4" /> Schedule Appointment
+              </button>
             </div>
           </div>
         </div>

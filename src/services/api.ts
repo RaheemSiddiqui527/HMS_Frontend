@@ -29,9 +29,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong';
-    console.error('API Error:', message);
-    return Promise.reject(new Error(message));
+    const data = error.response?.data;
+    const message = data?.message || 'Something went wrong';
+    
+    // If there are specific validation errors, collect them
+    let detailedMessage = message;
+    if (data?.errors && typeof data.errors === 'object') {
+      const errorDetails = Object.values(data.errors).join(', ');
+      detailedMessage = `${message}: ${errorDetails}`;
+    }
+
+    console.error('API Error:', detailedMessage);
+    return Promise.reject(new Error(detailedMessage));
   }
 );
 

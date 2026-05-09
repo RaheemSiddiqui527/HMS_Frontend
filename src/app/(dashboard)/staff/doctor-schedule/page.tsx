@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Stethoscope, Calendar, Clock, ChevronRight, Search,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, User
@@ -77,6 +77,11 @@ export default function StaffDoctorSchedulePage() {
     }
   }, [doctorsLoaded]);
 
+  // Load doctors on mount
+  useEffect(() => {
+    loadDoctors();
+  }, [loadDoctors]);
+
   // ── Load doctor's schedule for selected date
   const loadSchedule = useCallback(async (doctorId: string, date: string) => {
     setLoadingSchedule(true);
@@ -146,11 +151,10 @@ export default function StaffDoctorSchedulePage() {
 
                 <div className="p-3 space-y-2 max-h-[420px] overflow-y-auto">
                   {!doctorsLoaded && !loadingDoctors ? (
-                    <button onClick={loadDoctors}
-                      className="w-full py-8 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors flex flex-col items-center gap-2">
-                      <Stethoscope className="w-8 h-8 text-slate-200" />
-                      Click to load doctors
-                    </button>
+                    <div className="py-20 text-center">
+                      <div className="w-10 h-10 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Initializing registry...</p>
+                    </div>
                   ) : loadingDoctors ? (
                     [...Array(4)].map((_, i) => (
                       <div key={i} className="animate-pulse h-16 bg-slate-50 rounded-2xl border border-slate-100" />

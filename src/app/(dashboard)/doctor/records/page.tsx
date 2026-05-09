@@ -306,7 +306,8 @@ function ViewRecordModal({ record, onClose }: { record: any, onClose: () => void
 
       // Use html2canvas-pro to support modern Tailwind v4 colors like lab() and oklch()
       const html2canvas = (await import('html2canvas-pro')).default;
-      const { jsPDF } = await import('jspdf');
+      const jspdfModule = await import('jspdf');
+      const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
 
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
