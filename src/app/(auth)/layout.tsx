@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer legalities matching mockup */}
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center text-[11px] font-bold text-slate-400">
+        <div className="py-6 flex justify-center text-[11px] font-bold text-slate-400">
            Copyright © SDI Health Care, All Rights Reserved &nbsp;
            <a href="/terms" className="text-primary-700 hover:text-primary-800 ml-1">Terms</a> &nbsp;|&nbsp;
            <a href="/privacy" className="text-primary-700 hover:text-primary-800">Privacy Policy</a>
