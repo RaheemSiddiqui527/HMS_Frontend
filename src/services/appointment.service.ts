@@ -33,6 +33,11 @@ export const appointmentService = {
     return response.data;
   },
 
+  async markAsPaid(appointmentId: string) {
+    const response = await api.patch(`/appointments/${appointmentId}/mark-paid`);
+    return response.data;
+  },
+
   /**
    * Get specific appointment details
    */

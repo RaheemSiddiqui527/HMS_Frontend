@@ -4,41 +4,71 @@ import { User, Shield, Stethoscope, Mail, Phone, Camera, Save, Lock, Activity, L
 import { useRouter } from 'next/navigation';
 import ActiveSessions from '../../../../components/ActiveSessions';
 import { authService } from '@/services/auth.service';
+import { toast } from 'react-hot-toast';
 
 export default function DoctorProfilePage() {
   const [profile, setProfile] = useState<any>(null);
+  const [stats, setStats] = useState<any>({
+    totalPatients: 0,
+    totalAppointments: 0,
+    totalPrescriptions: 0,
+    experience: 0
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<any>({});
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            setProfile({
-                firstName: payload.firstName || 'Medical',
-                lastName: payload.lastName || 'Professional',
-                email: payload.email || 'doctor@hms.core',
-                role: payload.role || 'doctor',
-                specialization: 'Cardiology',
-                licenseNo: 'MED-99482-SYS',
-                phoneNumber: '+1 (555) 778-2234',
-                lastLogin: new Date().toLocaleDateString()
-            });
-        } catch (e) {
-            console.error(e);
-        }
-    }
-    setIsLoading(false);
+    fetchProfileData();
   }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      const profileResponse = await authService.getProfile();
+      const userData = profileResponse.data;
+      setProfile(userData);
+      setFormData(userData);
+
+      const statsResponse = await authService.getDoctorStats();
+      setStats(statsResponse.data);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load clinical profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      setIsSaving(true);
+      await authService.updateProfile(formData);
+      toast.success("Professional info updated");
+      setIsEditing(false);
+      fetchProfileData();
+    } catch (e) {
+      toast.error("Failed to update info");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleLogout = async () => {
     await authService.logout();
     router.push('/login');
   };
 
-  if (isLoading) return <div className="p-12 text-center font-bold text-slate-400">Loading Profile...</div>;
+  if (isLoading) return (
+    <div className="h-full flex items-center justify-center bg-slate-50">
+       <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Accessing Secure Profile...</p>
+       </div>
+    </div>
+  );
 
   return (
     <div className="h-full flex flex-col bg-slate-50/50 p-6 overflow-auto">
@@ -47,7 +77,7 @@ export default function DoctorProfilePage() {
         <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Manage your clinical profile and security</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto w-full pb-20">
         <div className="lg:col-span-2 space-y-6">
           {/* Profile Section */}
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
@@ -55,11 +85,8 @@ export default function DoctorProfilePage() {
                 <div className="absolute -bottom-10 left-10">
                    <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden relative">
                       <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
-                         <User className="w-12 h-12" />
+                         {profile?.firstName?.[0]}
                       </div>
-                      <button className="absolute inset-0 bg-slate-900/5 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-slate-900">
-                         <Camera className="w-5 h-5" />
-                      </button>
                    </div>
                 </div>
              </div>
@@ -87,15 +114,20 @@ export default function DoctorProfilePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                    <ProfileField label="Professional Email" value={profile?.email} icon={<Mail className="w-4 h-4" />} isEditing={false} />
-                   <ProfileField label="License Number" value={profile?.licenseNo} icon={<Shield className="w-4 h-4" />} isEditing={isEditing} />
-                   <ProfileField label="Phone Number" value={profile?.phoneNumber} icon={<Phone className="w-4 h-4" />} isEditing={isEditing} />
-                   <ProfileField label="Specialization" value={profile?.specialization} icon={<Stethoscope className="w-4 h-4" />} isEditing={isEditing} />
+                   <ProfileField label="License Number" value={formData.licenseNumber} icon={<Shield className="w-4 h-4" />} isEditing={isEditing} onChange={(v) => setFormData({...formData, licenseNumber: v})} />
+                   <ProfileField label="Phone Number" value={formData.phoneNumber} icon={<Phone className="w-4 h-4" />} isEditing={isEditing} onChange={(v) => setFormData({...formData, phoneNumber: v})} />
+                   <ProfileField label="Specialization" value={formData.specialization} icon={<Stethoscope className="w-4 h-4" />} isEditing={isEditing} onChange={(v) => setFormData({...formData, specialization: v})} />
                 </div>
 
                 {isEditing && (
                    <div className="mt-10 pt-8 border-t border-slate-100 flex justify-end">
-                      <button className="bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-[13px] shadow-sm hover:bg-black transition-all flex items-center gap-2">
-                         <Save className="w-4 h-4" /> Save Professional Info
+                      <button 
+                        onClick={handleUpdate}
+                        disabled={isSaving}
+                        className="bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-[13px] shadow-sm hover:bg-black transition-all flex items-center gap-2"
+                      >
+                         {isSaving ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Save className="w-4 h-4" />}
+                         Save Professional Info
                       </button>
                    </div>
                 )}
@@ -125,23 +157,23 @@ export default function DoctorProfilePage() {
            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
               <h3 className="text-[10px] font-black text-slate-400 mb-6 tracking-[0.2em] uppercase">Account Overview</h3>
               <div className="space-y-5">
-                 <StatItem label="Active Records" value="156" />
-                 <StatItem label="Prescriptions" value="482" />
-                 <StatItem label="Years in System" value="2.4" />
+                 <StatItem label="Active Patients" value={stats.totalPatients?.toString() || "0"} />
+                 <StatItem label="Prescriptions" value={stats.totalPrescriptions?.toString() || "0"} />
+                 <StatItem label="Experience" value={`${stats.experience || 0} Years`} />
               </div>
            </div>
 
-           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-lg shadow-slate-900/10">
               <Activity className="absolute -right-6 -bottom-6 w-32 h-32 text-white/5 group-hover:scale-110 transition-transform duration-700" />
-              <h3 className="font-black text-lg mb-2 relative z-10">Compliance</h3>
+              <h3 className="font-black text-lg mb-2 relative z-10 italic">Compliance</h3>
               <p className="text-slate-400 text-xs font-bold leading-relaxed relative z-10">Your digital medical signature is legally valid. All actions are logged for audit compliance.</p>
            </div>
 
            <button 
              onClick={handleLogout}
-             className="w-full bg-white border border-red-100 text-red-600 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm"
+             className="w-full bg-white border border-red-100 text-red-600 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm flex items-center justify-center gap-2"
            >
-              <LogOut className="w-4 h-4 inline mr-2" /> Terminate Session
+              <LogOut className="w-4 h-4" /> Terminate Session
            </button>
         </div>
       </div>
@@ -149,12 +181,16 @@ export default function DoctorProfilePage() {
   );
 }
 
-function ProfileField({ label, value, icon, isEditing }: { label: string, value: string, icon: React.ReactNode, isEditing: boolean }) {
+function ProfileField({ label, value, icon, isEditing, onChange }: { label: string, value: string, icon: React.ReactNode, isEditing: boolean, onChange?: (v: string) => void }) {
    return (
       <div className="space-y-1.5">
          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
          {isEditing ? (
-            <input className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-slate-900 font-bold text-slate-800 bg-slate-50 transition-all" defaultValue={value} />
+            <input 
+               className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-slate-900 font-bold text-slate-800 bg-slate-50 transition-all" 
+               defaultValue={value} 
+               onChange={(e) => onChange && onChange(e.target.value)}
+            />
          ) : (
             <div className="flex items-center gap-3 p-3.5 bg-slate-50/50 rounded-xl border border-slate-100 group hover:border-slate-200 transition-all">
                <span className="text-slate-400 group-hover:text-slate-900 transition-colors">{icon}</span>

@@ -11,7 +11,7 @@ export function FAQSection() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <FaqItem
-            question="What is SDI Health Care?"
+            question="What is Sunni Dawate Islami Health Care?"
             answer="A specialized software platform that integrates all of the information and processes of a clinic or hospital into a single system, streamlining workflows."
           />
           <FaqItem

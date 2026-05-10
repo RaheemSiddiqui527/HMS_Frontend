@@ -1,15 +1,18 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Plus, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, Calendar, X } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { appointmentService } from '../../../services/appointment.service';
 import { authService } from '../../../services/auth.service';
 import { SearchablePatientSelect } from '../../../components/dashboard/SearchablePatientSelect';
+import { toast } from 'react-hot-toast';
 
 export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0 });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ currentPage: 1, pages: 1, total: 0, limit: 10 });
 
   const fetchAppointments = async () => {
     try {
@@ -19,20 +22,25 @@ export default function DoctorDashboardPage() {
 
       const response = await appointmentService.getAppointments({ 
         userId: user.id,
-        role: 'doctor' 
+        page,
+        limit: 10
       });
       
-      // Backend returns { success: true, data: { appointments: [], ... } }
       const apps = response.data?.appointments || [];
-      setAppointments(apps);
+      const pag = response.data?.pagination || { currentPage: 1, pages: 1, total: 0, limit: 10 };
       
+      setAppointments(apps);
+      setPagination(pag);
+      
+      // Calculate stats based on current view (or fetch global stats from another endpoint if available)
       setStats({
-         total: apps.length,
+         total: pag.total,
          pending: apps.filter((a: any) => a.status === 'scheduled' || a.status === 'pending').length,
          completed: apps.filter((a: any) => a.status === 'completed').length
       });
     } catch (error) {
       console.error('Error fetching doctor appointments:', error);
+      toast.error("Failed to sync clinical schedule");
     } finally {
       setIsLoading(false);
     }
@@ -40,14 +48,15 @@ export default function DoctorDashboardPage() {
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [page]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
      try {
         await appointmentService.updateStatus(id, status);
+        toast.success(`Session ${status}`);
         fetchAppointments();
      } catch (error) {
-        alert("Failed to update status");
+        toast.error("Update failed");
      }
   };
 
@@ -78,15 +87,15 @@ export default function DoctorDashboardPage() {
       {/* Stats Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-b border-slate-200 bg-white shrink-0">
          <div className="p-6 border-r border-slate-100 flex items-center justify-between">
-            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Total Appointments</div>
+            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Lifetime Records</div>
             <div className="text-xl font-black text-slate-900">{stats.total}</div>
          </div>
          <div className="p-6 border-r border-slate-100 flex items-center justify-between">
-            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-amber-500">Pending Reviews</div>
+            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-amber-500">Current Pending</div>
             <div className="text-xl font-black text-slate-900">{stats.pending}</div>
          </div>
          <div className="p-6 flex items-center justify-between">
-            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-emerald-500">Completed Sessions</div>
+            <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest text-emerald-500">Done (Current Page)</div>
             <div className="text-xl font-black text-slate-900">{stats.completed}</div>
          </div>
       </div>
@@ -106,61 +115,88 @@ export default function DoctorDashboardPage() {
                <p className="text-slate-500 font-medium">You have no upcoming consultations scheduled for today.</p>
             </div>
          ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-8">
-               {appointments.map((app: any) => (
-                  <div key={app._id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all group">
-                     <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                           <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-lg">
-                              {app.patient?.firstName?.[0] || 'P'}
-                           </div>
-                           <div>
-                              <h4 className="text-[15px] font-black text-slate-900">{app.patient?.firstName} {app.patient?.lastName}</h4>
-                              <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                                 <Clock className="w-3 h-3" /> {new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {app.appointmentType || 'Consultation'}
+            <>
+               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-8">
+                  {appointments.map((app: any) => (
+                     <div key={app._id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between mb-4">
+                           <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-lg">
+                                 {app.patientId?.firstName?.[0] || 'P'}
+                              </div>
+                              <div>
+                                 <h4 className="text-[15px] font-black text-slate-900">{app.patientId?.firstName} {app.patientId?.lastName}</h4>
+                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                                    <Clock className="w-3 h-3" /> {app.timeSlot}
+                                 </div>
                               </div>
                            </div>
+                           <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                              app.status === 'scheduled' || app.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              app.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                           }`}>
+                              {app.status}
+                           </span>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                           app.status === 'scheduled' ? 'bg-amber-100 text-amber-700' :
-                           app.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                           {app.status}
-                        </span>
-                     </div>
-                     
-                     <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
-                        <p className="text-[12px] font-bold text-slate-500 line-clamp-1 italic">
-                           Reason: {app.reason || 'Routine check-up'}
-                        </p>
-                     </div>
+                        
+                        <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                           <p className="text-[12px] font-bold text-slate-500 line-clamp-1 italic">
+                              Reason: {app.reason || 'Routine check-up'}
+                           </p>
+                        </div>
 
+                        <div className="flex items-center gap-2">
+                           {(app.status === 'scheduled' || app.status === 'pending') && (
+                              <>
+                                 <button 
+                                    onClick={() => handleUpdateStatus(app._id, 'completed')}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-200"
+                                 >
+                                    <CheckCircle className="w-4 h-4" /> Complete Session
+                                 </button>
+                                 <button 
+                                    onClick={() => handleUpdateStatus(app._id, 'cancelled')}
+                                    className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-[12px] font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                                 >
+                                    <XCircle className="w-4 h-4" /> Cancel
+                                 </button>
+                              </>
+                           )}
+                           {app.status === 'completed' && (
+                              <button className="w-full bg-slate-900 text-white text-[12px] font-black py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-slate-200">
+                                 View Case History
+                              </button>
+                           )}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+
+               {/* Pagination Controls */}
+               {pagination.pages > 1 && (
+                  <div className="flex items-center justify-between bg-white px-8 py-5 rounded-2xl border border-slate-200 mt-8 shadow-sm">
+                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Page {pagination.currentPage} of {pagination.pages}
+                     </div>
                      <div className="flex items-center gap-2">
-                        {app.status === 'scheduled' && (
-                           <>
-                              <button 
-                                 onClick={() => handleUpdateStatus(app._id, 'completed')}
-                                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                              >
-                                 <CheckCircle className="w-4 h-4" /> Complete Session
-                              </button>
-                              <button 
-                                 onClick={() => handleUpdateStatus(app._id, 'canceled')}
-                                 className="flex-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 text-[12px] font-black py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                              >
-                                 <XCircle className="w-4 h-4" /> Cancel
-                              </button>
-                           </>
-                        )}
-                        {app.status === 'completed' && (
-                           <button className="w-full bg-slate-900 text-white text-[12px] font-black py-2.5 rounded-xl flex items-center justify-center gap-2">
-                              View Case History
-                           </button>
-                        )}
+                        <button 
+                           disabled={page === 1}
+                           onClick={() => setPage(p => Math.max(1, p - 1))}
+                           className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 disabled:opacity-30 transition-all border border-slate-100"
+                        >
+                           <ChevronLeft className="w-4 h-4" /> Previous
+                        </button>
+                        <button 
+                           disabled={page >= pagination.pages}
+                           onClick={() => setPage(p => p + 1)}
+                           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-30 transition-all shadow-lg shadow-emerald-200"
+                        >
+                           Next <ChevronRight className="w-4 h-4" />
+                        </button>
                      </div>
                   </div>
-               ))}
-            </div>
+               )}
+            </>
          )}
        {showAddModal && (
           <AddAppointmentModal 
@@ -188,7 +224,7 @@ function AddAppointmentModal({ onClose, onSuccess }: { onClose: () => void, onSu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.patientId) return alert("Please select a patient");
+    if (!formData.patientId) return toast.error("Please select a patient");
 
     try {
       setIsSubmitting(true);
@@ -197,10 +233,11 @@ function AddAppointmentModal({ onClose, onSuccess }: { onClose: () => void, onSu
         ...formData,
         doctorId: user.id
       });
+      toast.success("Consultation booked successfully");
       onSuccess();
     } catch (error) {
       console.error(error);
-      alert("Booking failed. Please check slot availability.");
+      toast.error("Booking failed. Please check slot availability.");
     } finally {
       setIsSubmitting(false);
     }
@@ -215,11 +252,11 @@ function AddAppointmentModal({ onClose, onSuccess }: { onClose: () => void, onSu
            </button>
            <div className="flex items-center gap-4 mb-2 md:mb-3">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
-                 <Calendar className="w-5 h-5 md:w-6 md:h-6" />
+                 <CalendarIcon className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <h1 className="text-xl md:text-2xl font-black italic">Admission</h1>
+              <h1 className="text-xl md:text-2xl font-black italic tracking-tighter">New Consultation</h1>
            </div>
-           <p className="text-slate-300 font-medium text-[11px] md:text-sm tracking-tight">Register a walk-in appointment or offline consultation.</p>
+           <p className="text-slate-300 font-medium text-[11px] md:text-sm tracking-tight">Register a walk-in appointment or offline clinical session.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5 md:space-y-6 overflow-y-auto flex-1">
@@ -245,7 +282,7 @@ function AddAppointmentModal({ onClose, onSuccess }: { onClose: () => void, onSu
                  >
                     {['09:00 AM - 09:30 AM', '10:00 AM - 10:30 AM', '11:00 AM - 11:30 AM', '02:00 PM - 02:30 PM', '04:00 PM - 04:30 PM'].map(slot => (
                        <option key={slot} value={slot}>{slot}</option>
-                    ))}
+                     ))}
                  </select>
               </div>
            </div>
@@ -274,7 +311,7 @@ function AddAppointmentModal({ onClose, onSuccess }: { onClose: () => void, onSu
                 disabled={isSubmitting}
                 className="flex-[2] py-4 rounded-2xl bg-slate-900 text-white font-black text-[13px] hover:bg-black transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
               >
-                 {isSubmitting ? 'Finalizing Registry...' : 'Confirm Admission'}
+                 {isSubmitting ? 'Syncing...' : 'Confirm Session'}
               </button>
            </div>
         </form>

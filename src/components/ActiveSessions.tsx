@@ -129,7 +129,7 @@ const ActiveSessions = () => {
                     
                     <div className="flex gap-4 text-[11px] text-slate-400 font-medium">
                       <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> {session.ipAddress}
+                        <MapPin className="w-3 h-3" /> {session.ipAddress === '::1' ? 'Localhost (Internal)' : session.ipAddress}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {new Date(session.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

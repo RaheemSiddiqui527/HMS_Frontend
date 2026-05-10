@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { Calendar, Clock, Search, X, Stethoscope, RefreshCw, Filter } from 'lucide-react';
+import { Calendar, Clock, Search, X, Stethoscope, RefreshCw, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { appointmentService } from '../../../../services/appointment.service';
+import { toast } from 'react-hot-toast';
 
 const STATUS_CLASSES: Record<string, string> = {
   pending:   'bg-amber-50  text-amber-700  border-amber-100',
@@ -24,30 +25,43 @@ export default function PatientAppointmentsPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selected, setSelected] = useState<Appointment | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ currentPage: 1, pages: 1, total: 0, limit: 10 });
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await appointmentService.getAppointments();
-      const d = res?.data;
-      const arr = Array.isArray(d?.appointments) ? d.appointments : Array.isArray(d) ? d : [];
-      setAppointments(arr);
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
-  }, []);
+      const res = await appointmentService.getAppointments({ 
+         page, 
+         limit: 10,
+         status: filterStatus === 'all' ? undefined : filterStatus
+      });
+      setAppointments(res.data?.appointments || []);
+      setPagination(res.data?.pagination || { currentPage: 1, pages: 1, total: 0, limit: 10 });
+    } catch (e) { 
+       console.error(e);
+       toast.error("Failed to load your appointments");
+    } finally { 
+       setIsLoading(false); 
+    }
+  }, [page, filterStatus]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCancel = async (id: string) => {
     if (!confirm('Cancel this appointment?')) return;
-    await appointmentService.updateStatus(id, 'cancelled');
-    fetchData();
+    try {
+       await appointmentService.updateStatus(id, 'cancelled');
+       toast.success("Appointment cancelled");
+       fetchData();
+    } catch (e) {
+       toast.error("Cancellation failed");
+    }
   };
 
   const filtered = appointments.filter(a => {
-    const matchS = filterStatus === 'all' || a.status === filterStatus;
     const q = search.toLowerCase();
-    return matchS && (!q || `${a.doctorId?.firstName} ${a.doctorId?.lastName} ${a.doctorId?.specialization}`.toLowerCase().includes(q));
+    return !q || `${a.doctorId?.firstName} ${a.doctorId?.lastName} ${a.doctorId?.specialization}`.toLowerCase().includes(q);
   });
 
   return (
@@ -57,14 +71,14 @@ export default function PatientAppointmentsPage() {
           <h1 className="text-xl font-black text-slate-900">My Appointments</h1>
           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mt-0.5">All your clinical visits</p>
         </div>
-        <button onClick={fetchData} className="w-10 h-10 rounded-xl border border-slate-100 bg-white flex items-center justify-center hover:border-slate-900 transition-all group">
+        <button onClick={() => { setPage(1); fetchData(); }} className="w-10 h-10 rounded-xl border border-slate-100 bg-white flex items-center justify-center hover:border-slate-900 transition-all group">
           <RefreshCw className="w-4 h-4 text-slate-400 group-hover:rotate-180 transition-all duration-500" />
         </button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-100 border-b border-slate-100 shrink-0">
         {[
-          { label: 'Total', value: appointments.length },
+          { label: 'Total Visits', value: pagination.total },
           { label: 'Upcoming', value: appointments.filter(a => a.status === 'scheduled' || a.status === 'pending').length },
           { label: 'Completed', value: appointments.filter(a => a.status === 'completed').length },
           { label: 'Cancelled', value: appointments.filter(a => a.status === 'cancelled').length },
@@ -81,13 +95,13 @@ export default function PatientAppointmentsPage() {
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-              <input type="text" placeholder="Search by doctor name..." value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-slate-900 transition-all placeholder:text-slate-300" />
+              <input type="text" placeholder="Search current page..." value={search} onChange={e => setSearch(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-slate-900 transition-all placeholder:text-slate-300 shadow-sm" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-slate-400 shrink-0" />
               {['all','pending','scheduled','completed','cancelled'].map(s => (
-                <button key={s} onClick={() => setFilterStatus(s)}
+                <button key={s} onClick={() => { setFilterStatus(s); setPage(1); }}
                   className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${filterStatus === s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-400'}`}>
                   {s}
                 </button>
@@ -103,25 +117,52 @@ export default function PatientAppointmentsPage() {
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">No appointments found</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filtered.map(appt => (
-                <div key={appt._id} onClick={() => setSelected(appt)}
-                  className="bg-white rounded-[2rem] border border-slate-100 shadow-sm px-6 py-5 flex items-center gap-5 hover:border-slate-900 hover:shadow-md transition-all group cursor-pointer">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
-                    <Stethoscope className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
+            <>
+               <div className="space-y-3">
+                  {filtered.map(appt => (
+                  <div key={appt._id} onClick={() => setSelected(appt)}
+                     className="bg-white rounded-[2rem] border border-slate-100 shadow-sm px-6 py-5 flex items-center gap-5 hover:border-slate-900 hover:shadow-md transition-all group cursor-pointer">
+                     <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
+                        <Stethoscope className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
+                     </div>
+                     <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-900">Dr. {appt.doctorId?.firstName ?? '—'} {appt.doctorId?.lastName ?? ''}</p>
+                        <p className="text-[11px] font-bold text-slate-400 mt-0.5">{appt.doctorId?.specialization ?? '—'}</p>
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] font-bold text-slate-400">
+                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(appt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {appt.timeSlot ?? '—'}</span>
+                        </div>
+                     </div>
+                     <StatusBadge status={appt.status} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-900">Dr. {appt.doctorId?.firstName ?? '—'} {appt.doctorId?.lastName ?? ''}</p>
-                    <p className="text-[11px] font-bold text-slate-400 mt-0.5">{appt.doctorId?.specialization ?? '—'}</p>
-                    <div className="flex items-center gap-3 mt-1.5 text-[11px] font-bold text-slate-400">
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(appt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {appt.timeSlot ?? '—'}</span>
-                    </div>
+                  ))}
+               </div>
+
+               {/* Pagination Controls */}
+               {pagination.pages > 1 && (
+                  <div className="flex items-center justify-between bg-white px-8 py-5 rounded-[2rem] border border-slate-100 mt-8 mb-10 shadow-sm">
+                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Page {pagination.currentPage} of {pagination.pages}
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <button 
+                           disabled={page === 1}
+                           onClick={() => setPage(p => Math.max(1, p - 1))}
+                           className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 disabled:opacity-30 transition-all border border-slate-100"
+                        >
+                           <ChevronLeft className="w-4 h-4" /> Previous
+                        </button>
+                        <button 
+                           disabled={page >= pagination.pages}
+                           onClick={() => setPage(p => p + 1)}
+                           className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black disabled:opacity-30 transition-all shadow-lg shadow-slate-200"
+                        >
+                           Next <ChevronRight className="w-4 h-4" />
+                        </button>
+                     </div>
                   </div>
-                  <StatusBadge status={appt.status} />
-                </div>
-              ))}
-            </div>
+               )}
+            </>
           )}
         </div>
       </div>
@@ -130,7 +171,7 @@ export default function PatientAppointmentsPage() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={() => setSelected(null)} />
-          <div className="relative bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden">
+          <div className="relative bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-slate-900 text-white px-8 py-8">
               <button onClick={() => setSelected(null)} className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"><X className="w-4 h-4" /></button>
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Appointment</p>

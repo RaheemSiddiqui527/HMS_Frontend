@@ -4,7 +4,8 @@ import { Calendar as CalendarIcon, Clock, User, CheckCircle, XCircle, Search, Fi
 import { appointmentService } from '../../../../services/appointment.service';
 import { authService } from '../../../../services/auth.service';
 import { SearchablePatientSelect } from '../../../../components/dashboard/SearchablePatientSelect';
-import { Calendar, Save, Trash, AlertCircle, Plus } from 'lucide-react';
+import { Calendar, Save, Trash, AlertCircle, Plus, DollarSign } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function DoctorAppointmentsPage() {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -39,9 +40,20 @@ export default function DoctorAppointmentsPage() {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await appointmentService.updateStatus(id, status);
+      toast.success(`Status updated to ${status}`);
       fetchAppointments();
-    } catch (error) {
-      alert("Status update failed");
+    } catch (error: any) {
+      toast.error(error.message || "Status update failed");
+    }
+  };
+
+  const handleMarkPaid = async (id: string) => {
+    try {
+      await appointmentService.markAsPaid(id);
+      toast.success("Payment recorded successfully");
+      fetchAppointments();
+    } catch (error: any) {
+      toast.error(error.message || "Payment update failed");
     }
   };
 
@@ -102,7 +114,9 @@ export default function DoctorAppointmentsPage() {
              </div>
              <div className="flex items-center gap-1.5 text-slate-400 border-l pl-4 border-slate-200">
                 <button className="p-1 hover:bg-slate-100 rounded-lg"><ChevronLeft className="w-4 h-4" /></button>
-                <span className="text-[11px] font-black text-slate-800 uppercase tracking-tighter">Today, 24 April</span>
+                <span className="text-[11px] font-black text-slate-800 uppercase tracking-tighter">
+                   {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </span>
                 <button className="p-1 hover:bg-slate-100 rounded-lg"><ChevronRight className="w-4 h-4" /></button>
              </div>
           </div>
@@ -126,7 +140,12 @@ export default function DoctorAppointmentsPage() {
          ) : (
             <div className="max-w-6xl mx-auto space-y-4">
                {appointments.map((app: any) => (
-                  <AppointmentCard key={app._id} appointment={app} onStatusChange={handleStatusChange} />
+                  <AppointmentCard 
+                    key={app._id} 
+                    appointment={app} 
+                    onStatusChange={handleStatusChange} 
+                    onMarkPaid={handleMarkPaid}
+                  />
                ))}
             </div>
          )}
@@ -157,7 +176,7 @@ function FilterBtn({ active, label, onClick }: { active: boolean, label: string,
    );
 }
 
-function AppointmentCard({ appointment, onStatusChange }: { appointment: any, onStatusChange: (id: string, st: string) => void }) {
+function AppointmentCard({ appointment, onStatusChange, onMarkPaid }: { appointment: any, onStatusChange: (id: string, st: string) => void, onMarkPaid: (id: string) => void }) {
    return (
       <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 shadow-sm hover:shadow-md transition-all group">
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -169,11 +188,21 @@ function AppointmentCard({ appointment, onStatusChange }: { appointment: any, on
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                      <h4 className="text-[14px] md:text-[15px] font-black text-slate-900 leading-none truncate">{appointment.patient?.firstName} {appointment.patient?.lastName}</h4>
                      <span className={`text-[8px] md:text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-                        appointment.status === 'scheduled' ? 'bg-amber-100 text-amber-600' : 
+                        appointment.status === 'pending' ? 'bg-slate-100 text-slate-500' :
+                        appointment.status === 'confirmed' ? 'bg-amber-100 text-amber-600' : 
                         appointment.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
                      }`}>
                         {appointment.status}
                      </span>
+                     {appointment.paymentStatus === 'completed' ? (
+                       <span className="text-[8px] md:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-600 flex items-center gap-1">
+                          <DollarSign className="w-2 h-2" /> Paid
+                       </span>
+                     ) : (
+                       <span className="text-[8px] md:text-[9px] font-black uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-400">
+                          Unpaid
+                       </span>
+                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] md:text-xs font-bold text-slate-400">
                      <span className="flex items-center gap-1.5 whitespace-nowrap"><Clock className="w-3.5 h-3.5" /> {new Date(appointment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -184,7 +213,30 @@ function AppointmentCard({ appointment, onStatusChange }: { appointment: any, on
             </div>
 
             <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-               {appointment.status === 'scheduled' && (
+               {appointment.paymentStatus !== 'completed' && appointment.status !== 'canceled' && (
+                  <button 
+                    onClick={() => onMarkPaid(appointment._id)}
+                    className="flex-1 md:flex-none flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-xl transition-all shadow-sm gap-2"
+                    title="Mark as Paid"
+                  >
+                     <DollarSign className="w-4 h-4" />
+                     <span className="text-[10px] font-black uppercase">Mark Paid</span>
+                  </button>
+               )}
+               
+               {/* Action for Pending Appointments */}
+               {appointment.status === 'pending' && (
+                  <button 
+                    onClick={() => onStatusChange(appointment._id, 'confirmed')}
+                    className="flex-1 md:flex-none flex items-center justify-center bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-sm gap-2"
+                    title="Confirm Appointment"
+                  >
+                     <CheckCircle className="w-4 h-4" />
+                     <span className="text-[10px] font-black uppercase">Confirm</span>
+                  </button>
+               )}
+
+               {appointment.status === 'confirmed' && (
                   <>
                      <button 
                         onClick={() => onStatusChange(appointment._id, 'completed')}
@@ -195,7 +247,7 @@ function AppointmentCard({ appointment, onStatusChange }: { appointment: any, on
                         <span className="md:hidden ml-2 text-[10px] font-black uppercase">Complete</span>
                      </button>
                      <button 
-                        onClick={() => onStatusChange(appointment._id, 'canceled')}
+                        onClick={() => onStatusChange(appointment._id, 'cancelled')}
                         className="flex-1 md:flex-none flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-xl transition-all border border-red-100"
                         title="Cancel Session"
                      >

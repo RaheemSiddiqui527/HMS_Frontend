@@ -9,6 +9,11 @@ export const adminService = {
     return response.data;
   },
 
+  async getReports() {
+    const response = await api.get('/admin/reports');
+    return response.data;
+  },
+
   /**
    * User Management: Get all users with filters
    */
@@ -30,6 +35,11 @@ export const adminService = {
    */
   async updateUserStatus(userId: string, status: 'active' | 'inactive' | 'pending') {
     const response = await api.patch(`/admin/users/${userId}/status`, { status });
+    return response.data;
+  },
+
+  async updateUser(userId: string, userData: any) {
+    const response = await api.patch(`/admin/users/${userId}`, userData);
     return response.data;
   },
 

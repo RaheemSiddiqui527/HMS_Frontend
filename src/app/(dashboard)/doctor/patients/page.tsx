@@ -111,18 +111,19 @@ function PatientCard({ patient }: { patient: any }) {
 
          <div className="grid grid-cols-2 gap-2 mt-auto">
             <Link 
-               href={`/doctor/records?patientId=${patient._id}`}
+               href={`/doctor/patients/${patient._id}`}
                className="flex items-center justify-center gap-2 bg-slate-900 text-white py-2.5 rounded-xl text-[11px] font-black hover:bg-black transition-colors"
             >
-               <FileText className="w-3.5 h-3.5" /> Case History
+               <FileText className="w-3.5 h-3.5" /> Manage Case
             </Link>
             <Link 
-               href={`/doctor/records?patientId=${patient._id}&type=vitals`}
+               href={`/doctor/records?patientId=${patient._id}`}
                className="flex items-center justify-center gap-2 bg-slate-100 text-slate-800 py-2.5 rounded-xl text-[11px] font-black hover:bg-slate-200 transition-colors"
             >
-               <Activity className="w-3.5 h-3.5" /> Vital Logs
+               <Activity className="w-3.5 h-3.5" /> Clinical Logs
             </Link>
          </div>
+
       </div>
    );
 }

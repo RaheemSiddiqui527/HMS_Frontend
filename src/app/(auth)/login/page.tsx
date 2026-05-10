@@ -3,10 +3,13 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff, Lock, Mail, User, Shield, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 import { authService } from '../../../services/auth.service';
+import { GoogleLogin } from '@react-oauth/google';
+import { toast } from 'react-hot-toast';
 
 // Form Validation Schemas using Yup
 const loginSchema = yup.object().shape({
@@ -79,6 +82,33 @@ function AuthContent() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setSocialLoading(true);
+      const { credential } = credentialResponse;
+      const response = await authService.googleLogin(credential);
+      
+      localStorage.setItem('token', response.data.token);
+      const payload = JSON.parse(atob(response.data.token.split('.')[1]));
+      const role = payload.role;
+
+      const roleRoutes: Record<string, string> = {
+        admin: '/admin',
+        doctor: '/doctor',
+        staff: '/staff',
+        patient: '/patient'
+      };
+
+      toast.success("Google login successful!");
+      router.push(roleRoutes[role] || '/admin');
+    } catch (error: any) {
+      console.error("Google login failed:", error);
+      toast.error(error.response?.data?.message || "Google authentication failed.");
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-[400px] flex flex-col items-center">
 
@@ -86,6 +116,14 @@ function AuthContent() {
       {/* <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-primary-100 border-2 border-primary-500/20">
          <img src="/logo2.png" alt="SDI Logo" className="w-10 h-10 object-contain brightness-0 invert" />
       </div> */}
+
+      <Link 
+        href="/" 
+        className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors mb-6 text-xs font-bold uppercase tracking-widest group"
+      >
+         <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+         Back to Home
+      </Link>
 
       {/* Header Context */}
       <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">SDI Health Care</h1>
@@ -129,35 +167,51 @@ function AuthContent() {
       </div>
 
       {/* Social Connects */}
-      <div className="flex items-center gap-4 w-full justify-center">
-         <button 
-           onClick={() => handleSocialLogin('google')}
-           className="w-12 h-12 bg-white border border-slate-200 rounded-full shadow-sm flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-colors"
-         >
-            {/* Google G visual mapping */}
-            <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>
-         </button>
-         <button 
-           onClick={() => handleSocialLogin('apple')}
-           className="w-12 h-12 bg-white border border-slate-200 rounded-full shadow-sm flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-colors"
-         >
-            {/* Apple Icon */}
-            <svg className="w-5 h-5 text-slate-800" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.04 2.26-.82 3.59-.8 1.49.02 2.62.66 3.37 1.77-3.02 1.7-2.38 5.68.74 6.9-1.01 2.25-2.05 3.9-2.78 4.3zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-         </button>
-         <button 
-           onClick={() => handleSocialLogin('facebook')}
-           className="w-12 h-12 bg-[#1877F2] border border-[#1877F2] rounded-full shadow-sm flex items-center justify-center hover:bg-[#166fe5] transition-colors"
-         >
-            {/* Facebook */}
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-         </button>
-         <button 
-           onClick={() => handleSocialLogin('twitter')}
-           className="w-12 h-12 bg-black border border-black rounded-full shadow-sm flex items-center justify-center hover:bg-slate-900 transition-colors"
-         >
-            {/* X */}
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
-         </button>
+      <div className="flex flex-col items-center gap-4 w-full">
+         <div className="w-full flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error("Google Login Failed")}
+              theme="outline"
+              size="large"
+              width="300"
+              shape="pill"
+            />
+         </div>
+         
+         <div className="flex items-center gap-4 w-full justify-center">
+            <button 
+              onClick={() => handleSocialLogin('github')}
+              className="w-12 h-12 bg-white border border-slate-200 rounded-full shadow-sm flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              title="Sign in with GitHub"
+            >
+               <svg className="w-6 h-6 text-slate-800" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            </button>
+            <button 
+              onClick={() => handleSocialLogin('apple')}
+              className="w-12 h-12 bg-white border border-slate-200 rounded-full shadow-sm flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              title="Sign in with Apple"
+            >
+               {/* Apple Icon */}
+               <svg className="w-5 h-5 text-slate-800" fill="currentColor" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.04 2.26-.82 3.59-.8 1.49.02 2.62.66 3.37 1.77-3.02 1.7-2.38 5.68.74 6.9-1.01 2.25-2.05 3.9-2.78 4.3zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            </button>
+            <button 
+              onClick={() => handleSocialLogin('facebook')}
+              className="w-12 h-12 bg-[#1877F2] border border-[#1877F2] rounded-full shadow-sm flex items-center justify-center hover:bg-[#166fe5] transition-colors"
+              title="Sign in with Facebook"
+            >
+               {/* Facebook */}
+               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </button>
+            <button 
+              onClick={() => handleSocialLogin('twitter')}
+              className="w-12 h-12 bg-black border border-black rounded-full shadow-sm flex items-center justify-center hover:bg-slate-900 transition-colors"
+              title="Sign in with X"
+            >
+               {/* X */}
+               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+            </button>
+         </div>
       </div>
     </div>
   );

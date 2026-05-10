@@ -16,6 +16,11 @@ export const authService = {
     return response.data;
   },
 
+  async googleLogin(idToken: string, role: string = 'patient') {
+    const response = await api.post('/auth/google', { idToken, role });
+    return response.data;
+  },
+
   /**
    * Unified Registration handler communicating with the backend register POST route.
    */
@@ -63,7 +68,17 @@ export const authService = {
   },
 
   async getProfile() {
-    const response = await api.get('/user/profile');
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+
+  async updateProfile(profileData: any) {
+    const response = await api.patch('/auth/profile', profileData);
+    return response.data;
+  },
+
+  async getDoctorStats() {
+    const response = await api.get('/user/doctor-stats');
     return response.data;
   }
 };

@@ -25,19 +25,18 @@ export function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 py-3"
           : "bg-white/70 backdrop-blur-md border-b border-white/20 py-5"
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
           {/* Logo Section */}
           <div className="flex items-center shrink-0 cursor-pointer">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#16a34a] rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-[#15803d]/20">
-                <img src="/logo2.png" alt="SDI Logo" className="w-6 h-6 object-contain brightness-0 invert" />
+              <div className="w-10 h-10  flex items-center justify-center shrink-0 ">
+                <img src="/logo.png" alt="SDI Logo" className="w-10 h-10 rounded-xl object-contain " />
               </div>
               <span className="font-extrabold text-2xl tracking-tight text-slate-900 hidden sm:block">SDI Health Care</span>
             </Link>
@@ -45,10 +44,10 @@ export function Navbar() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="#features" className="text-[15px] font-semibold text-slate-600 hover:text-primary-600 transition-colors">Features</Link>
-            <Link href="#how-it-works" className="text-[15px] font-semibold text-slate-600 hover:text-primary-600 transition-colors">How it Works</Link>
-            <Link href="#pricing" className="text-[15px] font-semibold text-slate-600 hover:text-primary-600 transition-colors">Pricing</Link>
-            <Link href="#faq" className="text-[15px] font-semibold text-slate-600 hover:text-primary-600 transition-colors">FAQ</Link>
+            <Link href="/services" className="text-[14px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 transition-colors">Services</Link>
+            <Link href="/blog" className="text-[14px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 transition-colors">Health Blog</Link>
+            <Link href="/faq" className="text-[14px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 transition-colors">FAQ</Link>
+            <Link href="/contact" className="text-[14px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-600 transition-colors">Contact</Link>
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -71,9 +70,9 @@ export function Navbar() {
             >
               <span className="sr-only">Open main menu</span>
               {mobileMenuOpen ? (
-                 <X className="block h-7 w-7" aria-hidden="true" />
+                <X className="block h-7 w-7" aria-hidden="true" />
               ) : (
-                 <Menu className="block h-7 w-7" aria-hidden="true" />
+                <Menu className="block h-7 w-7" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -82,22 +81,21 @@ export function Navbar() {
 
       {/* Mobile Menu Overlay */}
       <div
-         className={`md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-xl transition-all duration-300 origin-top overflow-hidden ${
-           mobileMenuOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
-         }`}
+        className={`md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 shadow-xl transition-all duration-300 origin-top overflow-hidden ${mobileMenuOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
+          }`}
       >
         <div className="px-5 pt-4 pb-8 space-y-3">
-          <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
-             Features
+          <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
+            Medical Services
           </Link>
-          <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
-             How it Works
+          <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
+            Health Blog
           </Link>
-          <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
-             Pricing
+          <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
+            FAQ
           </Link>
-          <Link href="#faq" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
-             FAQ
+          <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-colors">
+            Contact Us
           </Link>
 
           <div className="border-t border-slate-100 mt-6 pt-6 flex flex-col gap-3">

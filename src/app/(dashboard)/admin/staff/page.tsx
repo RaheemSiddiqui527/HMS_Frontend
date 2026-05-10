@@ -1,21 +1,31 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Building2, Search, Activity, Trash2, Plus, X } from 'lucide-react';
+import { Building2, Search, Activity, Trash2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminService } from '../../../../services/admin.service';
+import { toast } from 'react-hot-toast';
 
 export default function AdminStaffPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [search, setSearch] = useState('');
   const [showStaffModal, setShowStaffModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ currentPage: 1, pages: 1, total: 0, limit: 10 });
 
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
-      const data = await adminService.getAllUsers({ role: 'staff', search });
+      const data = await adminService.getAllUsers({ 
+         role: 'staff', 
+         search,
+         page,
+         limit: 10
+      });
       setUsers(data.data?.users || []);
+      setPagination(data.data?.pagination || { currentPage: 1, pages: 1, total: 0, limit: 10 });
     } catch (error) {
       console.error('Error fetching staff:', error);
+      toast.error("Failed to load staff records");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -26,16 +36,16 @@ export default function AdminStaffPage() {
        fetchUsers();
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, page]);
 
   const handleUpdateStatus = async (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     try {
        await adminService.updateUserStatus(userId, newStatus);
+       toast.success(`Staff marked as ${newStatus}`);
        fetchUsers();
     } catch (error) {
-       console.error("Failed to update status", error);
-       alert("Failed to update status");
+       toast.error("Status update failed");
     }
   };
 
@@ -43,10 +53,10 @@ export default function AdminStaffPage() {
      if (!confirm("Are you sure you want to delete this staff member?")) return;
      try {
        await adminService.deleteUser(userId, false);
+       toast.success("Staff profile deleted");
        fetchUsers();
      } catch(error) {
-       console.error("Failed to delete user", error);
-       alert("Failed to delete user");
+       toast.error("Deletion failed");
      }
   };
 
@@ -73,87 +83,115 @@ export default function AdminStaffPage() {
                   type="text"
                   placeholder="Search staff by name or email..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   className="pl-9 pr-4 py-2 text-[13px] w-full border border-slate-200 rounded-lg outline-none focus:border-purple-500 font-bold"
                />
             </div>
          </div>
 
          <div className="flex-1 overflow-auto">
-           <table className="w-full text-left border-collapse min-w-[800px]">
-              <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 shadow-sm">
-                 <tr>
-                    <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Staff Information</th>
-                    <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Department</th>
-                    <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Status</th>
-                    <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase text-right">Actions</th>
-                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                 {isLoadingUsers ? (
-                    <tr>
-                       <td colSpan={4} className="p-12 text-center text-slate-400 font-bold text-sm">Loading staff roster...</td>
-                    </tr>
-                 ) : users.length === 0 ? (
-                    <tr>
-                       <td colSpan={4} className="p-12 text-center text-slate-400 font-bold text-sm flex flex-col items-center">
-                         <Search className="w-8 h-8 mb-3 text-slate-300" />
-                         No staff found matching the given search.
-                       </td>
-                    </tr>
-                 ) : (
-                    users.map((user) => (
-                       <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4">
-                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-100">
-                                   {user.firstName[0]}{user.lastName[0]}
-                                </div>
-                                <div>
-                                   <div className="text-[13.5px] font-bold text-slate-800">{user.firstName} {user.lastName}</div>
-                                   <div className="text-[11px] font-bold text-slate-400">{user.email}</div>
-                                </div>
-                             </div>
-                          </td>
-                          <td className="p-4">
-                             <div className="text-[12px] font-bold text-slate-700">{user.designation || 'Staff'}</div>
-                             <div className="text-[11px] font-semibold text-slate-400">Dept: {user.department || 'Operations'}</div>
-                          </td>
-                          <td className="p-4">
-                             <div className="flex items-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full ${
-                                  user.status === 'active' ? 'bg-green-500' :
-                                  user.status === 'inactive' ? 'bg-red-500' : 'bg-amber-500'
-                                }`}></span>
-                                <span className="text-[12px] font-bold text-slate-600 capitalize">
-                                   {user.status}
-                                </span>
-                             </div>
-                          </td>
-                          <td className="p-4 text-right">
-                             <div className="flex items-center gap-2 justify-end">
-                                <button
-                                   onClick={() => handleUpdateStatus(user._id, user.status)}
-                                   title="Toggle Status"
-                                   className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-100"
-                                >
-                                   <Activity className="w-4 h-4" />
-                                </button>
-                                <button
-                                   onClick={() => handleDeleteUser(user._id)}
-                                   title="Delete Profile"
-                                   className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                                >
-                                   <Trash2 className="w-4 h-4" />
-                                </button>
-                             </div>
-                          </td>
-                       </tr>
-                    ))
-                 )}
-              </tbody>
-           </table>
+            <table className="w-full text-left border-collapse min-w-[800px]">
+               <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-200 shadow-sm">
+                  <tr>
+                     <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Staff Information</th>
+                     <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Department</th>
+                     <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">Status</th>
+                     <th className="p-4 text-[11px] font-extrabold tracking-widest text-slate-400 uppercase text-right">Actions</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-slate-100">
+                  {isLoadingUsers ? (
+                     <tr>
+                        <td colSpan={4} className="p-12 text-center text-slate-400 font-bold text-sm">Loading staff roster...</td>
+                     </tr>
+                  ) : users.length === 0 ? (
+                     <tr>
+                        <td colSpan={4} className="p-12 text-center text-slate-400 font-bold text-sm flex flex-col items-center">
+                          <Search className="w-8 h-8 mb-3 text-slate-300" />
+                          No staff found matching the given search.
+                        </td>
+                     </tr>
+                  ) : (
+                     users.map((user) => (
+                        <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
+                           <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-100">
+                                    {user.firstName?.[0]}{user.lastName?.[0]}
+                                 </div>
+                                 <div>
+                                    <div className="text-[13.5px] font-bold text-slate-800">{user.firstName} {user.lastName}</div>
+                                    <div className="text-[11px] font-bold text-slate-400">{user.email}</div>
+                                 </div>
+                              </div>
+                           </td>
+                           <td className="p-4">
+                              <div className="text-[12px] font-bold text-slate-700">{user.designation || 'Staff'}</div>
+                              <div className="text-[11px] font-semibold text-slate-400">Dept: {user.department || 'Operations'}</div>
+                           </td>
+                           <td className="p-4">
+                              <div className="flex items-center gap-1.5">
+                                 <span className={`w-2 h-2 rounded-full ${
+                                   user.status === 'active' ? 'bg-green-500' :
+                                   user.status === 'inactive' ? 'bg-red-500' : 'bg-amber-500'
+                                 }`}></span>
+                                 <span className="text-[12px] font-bold text-slate-600 capitalize">
+                                    {user.status}
+                                 </span>
+                              </div>
+                           </td>
+                           <td className="p-4 text-right">
+                              <div className="flex items-center gap-2 justify-end">
+                                 <button
+                                    onClick={() => handleUpdateStatus(user._id, user.status)}
+                                    title="Toggle Status"
+                                    className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-100"
+                                 >
+                                    <Activity className="w-4 h-4" />
+                                 </button>
+                                 <button
+                                    onClick={() => handleDeleteUser(user._id)}
+                                    title="Delete Profile"
+                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                                 >
+                                    <Trash2 className="w-4 h-4" />
+                                 </button>
+                              </div>
+                           </td>
+                        </tr>
+                     ))
+                  )}
+               </tbody>
+            </table>
          </div>
+
+         {/* Pagination Footer */}
+         {!isLoadingUsers && pagination.pages > 1 && (
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Showing {users.length} of {pagination.total} Staff Records
+               </div>
+               <div className="flex items-center gap-2">
+                  <button 
+                     disabled={page === 1}
+                     onClick={() => setPage(p => Math.max(1, p - 1))}
+                     className="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:text-purple-600 transition-all shadow-xs"
+                  >
+                     <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="text-[11px] font-black text-slate-600 px-3">
+                     Page {pagination.currentPage} / {pagination.pages}
+                  </div>
+                  <button 
+                     disabled={page >= pagination.pages}
+                     onClick={() => setPage(p => p + 1)}
+                     className="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:text-purple-600 transition-all shadow-xs"
+                  >
+                     <ChevronRight className="w-4 h-4" />
+                  </button>
+               </div>
+            </div>
+         )}
       </div>
 
       {showStaffModal && (
@@ -184,9 +222,11 @@ function AddStaffModal({ onClose, onSuccess }: { onClose: () => void, onSuccess:
     setError('');
     try {
       await adminService.createStaff(formData);
+      toast.success("Staff profile registered successfully");
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Failed to create staff');
+      toast.error("Registration failed");
     } finally {
       setLoading(false);
     }
@@ -194,7 +234,7 @@ function AddStaffModal({ onClose, onSuccess }: { onClose: () => void, onSuccess:
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="text-lg font-black text-slate-800 flex items-center gap-2"><Plus className="w-5 h-5 text-purple-600"/> Register Staff</h3>
             <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded text-slate-400"><X className="w-5 h-5"/></button>

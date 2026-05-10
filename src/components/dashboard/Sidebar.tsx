@@ -4,7 +4,8 @@ import {
   LayoutGrid, Calendar, Folder, Mail, Phone, Bell,
   Settings, HelpCircle, Activity, ChevronDown, Plus,
   Building2, X, ChevronRight, LogOut, ChevronLeft,
-  Users, Stethoscope, FileText, Pill, FileBox, Database
+  Users, Stethoscope, FileText, Pill, FileBox, Database,
+  MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -44,8 +45,12 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
        ]},
        { title: 'Administration', icon: <Database className="w-5 h-5"/>, links: [
           { label: 'User Directory', href: '/admin/users', icon: <Users className="w-4 h-4"/> },
+          { label: 'Appointments Registry', href: '/admin/appointments', icon: <Calendar className="w-4 h-4"/> },
           { label: 'Doctors', href: '/admin/doctors', icon: <Stethoscope className="w-4 h-4"/> },
-          { label: 'Staff', href: '/admin/staff', icon: <Building2 className="w-4 h-4"/> }
+          { label: 'Staff', href: '/admin/staff', icon: <Building2 className="w-4 h-4"/> },
+          { label: 'Manage Blogs', href: '/admin/blogs', icon: <FileText className="w-4 h-4"/> },
+          { label: 'Manage FAQs', href: '/admin/faqs', icon: <HelpCircle className="w-4 h-4"/> },
+          { label: 'Patient Enquiries', href: '/admin/inquiries', icon: <MessageSquare className="w-4 h-4"/> }
        ]},
        { title: 'System', icon: <Settings className="w-5 h-5"/>, links: [
           { label: 'Notifications', href: '/admin/notifications', icon: <Bell className="w-4 h-4"/> },
@@ -109,7 +114,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
                <img src="/logo2.png" alt="SDI Logo" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
             <span className="font-black text-xl tracking-tight text-slate-900 flex items-center gap-1">
-               SDI <span className="text-primary-600">Care</span> <sup className="text-[10px] font-bold text-slate-400 mt-1">®</sup>
+               SDI <span className="text-primary-600">HEALTHCARE</span> <sup className="text-[10px] font-bold text-slate-400 mt-1">®</sup>
             </span>
             <button className="md:hidden absolute right-4 p-2 text-slate-500 rounded-md hover:bg-slate-200" onClick={() => setIsOpen(false)}>
                <X className="w-5 h-5"/>

@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Calendar, Clock, Search, Eye, X, Stethoscope, Filter, RefreshCw, AlertCircle, Plus } from 'lucide-react';
+import { Calendar, Clock, Search, Eye, X, Stethoscope, Filter, RefreshCw, AlertCircle, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { appointmentService } from '../../../../services/appointment.service';
 import { adminService } from '../../../../services/admin.service';
+import { toast } from 'react-hot-toast';
 
 const STATUS_CLASSES: Record<string, string> = {
   pending:   'bg-amber-50  text-amber-700  border-amber-100',
@@ -40,20 +41,28 @@ function StaffAppointmentsContent() {
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [showBooking, setShowBooking] = useState(false);
   const [preSelectedPatient, setPreSelectedPatient] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ currentPage: 1, pages: 1, total: 0, limit: 15 });
 
   const searchParams = useSearchParams();
-
-  const toArray = (v: any): any[] => Array.isArray(v) ? v : [];
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await appointmentService.getAppointments({ limit: 200 });
-      const d = res?.data;
-      setAppointments(toArray(d?.appointments ?? d));
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
-  }, []);
+      const res = await appointmentService.getAppointments({ 
+         page, 
+         limit: 15,
+         status: filterStatus === 'all' ? undefined : filterStatus
+      });
+      setAppointments(res.data?.appointments || []);
+      setPagination(res.data?.pagination || { currentPage: 1, pages: 1, total: 0, limit: 15 });
+    } catch (e) { 
+       console.error(e);
+       toast.error("Failed to sync registry");
+    } finally { 
+       setIsLoading(false); 
+    }
+  }, [page, filterStatus]);
 
   useEffect(() => {
     const open = searchParams.get('openBooking');
@@ -67,9 +76,8 @@ function StaffAppointmentsContent() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const filtered = appointments.filter(a => {
-    const matchS = filterStatus === 'all' || a.status === filterStatus;
     const q = search.toLowerCase();
-    return matchS && (!q || `${a.patientId?.firstName} ${a.patientId?.lastName} ${a.doctorId?.firstName} ${a.doctorId?.lastName}`.toLowerCase().includes(q));
+    return !q || `${a.patientId?.firstName} ${a.patientId?.lastName} ${a.doctorId?.firstName} ${a.doctorId?.lastName}`.toLowerCase().includes(q);
   });
 
   return (
@@ -84,7 +92,7 @@ function StaffAppointmentsContent() {
           <button onClick={() => setShowBooking(true)} className="flex items-center gap-2 bg-[#185d51] hover:bg-[#124a40] text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/10">
             <Plus className="w-3.5 h-3.5" /> Emergency Booking
           </button>
-          <button onClick={fetchData} className="w-10 h-10 rounded-xl border border-slate-100 bg-white flex items-center justify-center hover:border-slate-900 transition-all group">
+          <button onClick={() => { setPage(1); fetchData(); }} className="w-10 h-10 rounded-xl border border-slate-100 bg-white flex items-center justify-center hover:border-slate-900 transition-all group">
             <RefreshCw className="w-4 h-4 text-slate-400 group-hover:rotate-180 transition-all duration-500" />
           </button>
         </div>
@@ -93,10 +101,10 @@ function StaffAppointmentsContent() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-100 border-b border-slate-100 shrink-0">
         {[
-          { label: 'Total', value: appointments.length },
-          { label: 'Pending', value: appointments.filter(a => a.status === 'pending').length },
-          { label: 'Scheduled', value: appointments.filter(a => a.status === 'scheduled').length },
-          { label: 'Completed', value: appointments.filter(a => a.status === 'completed').length },
+          { label: 'Total Records', value: pagination.total },
+          { label: 'Current View', value: appointments.length },
+          { label: 'Active Page', value: pagination.currentPage },
+          { label: 'Total Pages', value: pagination.pages },
         ].map(s => (
           <div key={s.label} className="bg-white px-6 py-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{s.label}</p>
@@ -112,13 +120,13 @@ function StaffAppointmentsContent() {
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-              <input type="text" placeholder="Search patient or doctor..." value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-slate-900 transition-all placeholder:text-slate-300" />
+              <input type="text" placeholder="Search current page results..." value={search} onChange={e => setSearch(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-slate-900 transition-all placeholder:text-slate-300 shadow-sm" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-slate-400 shrink-0" />
               {['all','pending','scheduled','completed','cancelled'].map(s => (
-                <button key={s} onClick={() => setFilterStatus(s)}
+                <button key={s} onClick={() => { setFilterStatus(s); setPage(1); }}
                   className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${filterStatus === s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-400'}`}>
                   {s}
                 </button>
@@ -127,7 +135,7 @@ function StaffAppointmentsContent() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden mb-8">
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[600px]">
                 <thead>
@@ -178,10 +186,28 @@ function StaffAppointmentsContent() {
                 </tbody>
               </table>
             </div>
-            {!isLoading && (
-              <div className="px-6 py-4 border-t border-slate-50">
-                <p className="text-[10px] font-bold text-slate-400">Showing {filtered.length} of {appointments.length} records</p>
-              </div>
+            
+            {/* Pagination Controls */}
+            {!isLoading && pagination.pages > 1 && (
+               <div className="px-6 py-4 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Page {pagination.currentPage} of {pagination.pages}</p>
+                  <div className="flex items-center gap-2">
+                     <button 
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:text-[#185d51] transition-all shadow-sm"
+                     >
+                        <ChevronLeft className="w-4 h-4" />
+                     </button>
+                     <button 
+                        disabled={page >= pagination.pages}
+                        onClick={() => setPage(p => p + 1)}
+                        className="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:text-[#185d51] transition-all shadow-sm"
+                     >
+                        <ChevronRight className="w-4 h-4" />
+                     </button>
+                  </div>
+               </div>
             )}
           </div>
         </div>
@@ -191,7 +217,7 @@ function StaffAppointmentsContent() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={() => setSelected(null)} />
-          <div className="relative bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden">
+          <div className="relative bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-slate-900 text-white px-8 py-8">
               <button onClick={() => setSelected(null)} className="absolute top-5 right-5 w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"><X className="w-4 h-4" /></button>
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Appointment Detail</p>
@@ -297,20 +323,7 @@ function BookingModal({ onClose, onSuccess, initialPatientId }: { onClose: () =>
         if (!formData.firstName || !formData.lastName || !formData.email) {
           throw new Error('Please fill in all required patient fields');
         }
-        const regRes = await adminService.createDoctor({ // adminService.createDoctor is just a placeholder name for "any user creation" but better use authService.register or similar
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber,
-          password: formData.password,
-          role: 'patient'
-        });
-        // Wait, adminService.createDoctor calls /admin/doctors. I should use a more generic one or authService.register.
-        // Actually, let's check authService.register.
-        // authService.register(formData)
-        const res = await adminService.getAllUsers({ role: 'patient' }); // Refresh list logic is complex here, let's just use the returned user.
         
-        // Let's use a more direct approach:
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -328,16 +341,17 @@ function BookingModal({ onClose, onSuccess, initialPatientId }: { onClose: () =>
         finalPatientId = result.data.user._id;
       }
 
-      if (!finalPatientId || !formData.doctorId) return alert('Please select both patient and doctor');
+      if (!finalPatientId || !formData.doctorId) return toast.error('Please select both patient and doctor');
       
       await appointmentService.createAppointment({
         ...formData,
         patientId: finalPatientId,
         date: new Date(formData.date).toISOString()
       });
+      toast.success("Emergency Booking Confirmed");
       onSuccess();
     } catch (e: any) {
-      alert(e.message || 'Failed to process request');
+      toast.error(e.message || 'Failed to process request');
     } finally {
       setLoading(false);
     }
@@ -346,7 +360,7 @@ function BookingModal({ onClose, onSuccess, initialPatientId }: { onClose: () =>
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose} />
-      <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/20 flex flex-col max-h-[90vh]">
+      <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/20 flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-8 duration-500">
         <div className="bg-[#185d51] text-white p-8 shrink-0">
           <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"><X className="w-5 h-5" /></button>
           <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4"><Plus className="w-6 h-6" /></div>

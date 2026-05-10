@@ -7,12 +7,16 @@ export function HeroSection() {
       <div className="absolute top-0 left-0 w-full h-[700px] bg-linear-to-b from-primary-50/80 to-transparent -z-10 rounded-full blur-3xl opacity-80 pointer-events-none"></div>
 
       <div className="flex-1 space-y-8 animate-fade-in relative z-10 pt-10 lg:pt-0">
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.05] text-balance">
-          Modern Hospital <br />
-          Management System <br />
-          for <span className="relative inline-block z-10">
-            Better Healthcare
-            {/* SVG Swoosh underline matching the mockup style in primary color */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-100 rounded-full text-primary-700 text-[10px] font-black uppercase tracking-widest">
+           <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse"></div>
+           Open 24 Hours • Verified Multi-Speciality
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.05] text-balance">
+          Healthcare <br />
+          Excellence <br />
+          at <span className="relative inline-block z-10">
+            SDI Hospital
             <svg className="absolute w-[110%] h-5 -bottom-2 -left-2 text-primary-500 -z-10" viewBox="0 0 100 20" preserveAspectRatio="none">
                <path d="M0 15 Q50 0 100 12" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/>
                <path d="M10 18 Q50 5 95 18" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" opacity="0.5"/>
@@ -21,49 +25,44 @@ export function HeroSection() {
         </h1>
 
         <p className="max-w-xl text-lg sm:text-xl text-slate-600 font-medium leading-relaxed text-balance">
-          Automate and streamline operations across your hospital or clinic. SDI Health Care offers the most modern and complete administration software.
+          SDI Healthcare Hospital & Diagnostic Centre provides advanced medical care with a human touch. From diagnostics to complex surgeries, your health is in expert hands.
         </p>
 
-        {/* Email Input / CTA matching the Monotree mockup style */}
-        <div className="mt-8">
-           <form className="flex items-center w-full max-w-md bg-white border border-slate-300 rounded-lg p-1.5 shadow-sm focus-within:ring-2 focus-within:ring-primary-500 transition-all">
-             <input
-               type="email"
-               placeholder="Enter work email"
-               required
-               className="flex-1 bg-transparent px-4 py-3 outline-none text-slate-700 font-medium placeholder-slate-400"
-             />
-             <button type="submit" className="bg-primary-400 hover:bg-primary-500 text-white font-bold py-3.5 px-6 rounded-md transition-colors shrink-0 shadow-sm">
-                Book a demo
-             </button>
-           </form>
+        <div className="flex flex-wrap items-center gap-4 mt-8">
+           <a href="/book-appointment" className="bg-primary-600 hover:bg-primary-700 text-white font-black py-4 px-8 rounded-2xl transition-all shadow-xl shadow-primary-600/20 text-xs uppercase tracking-widest">
+              Book Appointment
+           </a>
+           <a href="tel:07559285928" className="bg-white border border-slate-200 hover:border-slate-900 text-slate-900 font-black py-4 px-8 rounded-2xl transition-all text-xs uppercase tracking-widest flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+              Emergency Call
+           </a>
         </div>
 
         {/* Stats Row */}
         <div className="flex items-center gap-8 pt-8 mt-2 border-t border-slate-200/60 max-w-md">
            <div>
-             <div className="text-3xl sm:text-4xl font-black text-slate-900">4,000+</div>
-             <div className="text-sm text-slate-500 font-medium mt-1">Healthcare professionals</div>
+             <div className="text-3xl sm:text-4xl font-black text-slate-900">24/7</div>
+             <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Care & Pharmacy</div>
            </div>
            <div className="w-px h-14 bg-slate-200"></div>
            <div>
-             <div className="text-3xl sm:text-4xl font-black text-slate-900">~20k</div>
-             <div className="text-sm text-slate-500 font-medium mt-1">Average daily users</div>
+             <div className="text-3xl sm:text-4xl font-black text-slate-900">36+</div>
+             <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Google Reviews</div>
            </div>
         </div>
 
         {/* Star Rating Row */}
         <div className="flex items-center gap-3 pt-6 border-t border-slate-200/60 max-w-md">
-           <div className="flex text-slate-900">
+           <div className="flex text-primary-500">
               <Star className="w-5 h-5 fill-current" />
               <Star className="w-5 h-5 fill-current" />
               <Star className="w-5 h-5 fill-current" />
               <Star className="w-5 h-5 fill-current" />
-              <StarHalf className="w-5 h-5 fill-current" />
+              <Star className="w-5 h-5 fill-current" />
            </div>
            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-slate-900">4.5</span>
-              <span className="text-sm text-slate-500 font-medium">Average user rating</span>
+              <span className="font-extrabold text-slate-900">5.0</span>
+              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Average Patient Rating</span>
            </div>
         </div>
       </div>

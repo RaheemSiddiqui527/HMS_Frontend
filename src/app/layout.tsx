@@ -2,6 +2,8 @@ import { Plus_Jakarta_Sans, Dancing_Script } from 'next/font/google';
 import "./global.css";
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
+import PushNotificationInitializer from '@/components/PushNotificationInitializer';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -14,9 +16,11 @@ const fontSignature = Dancing_Script({
 });
 
 export const metadata = {
-  title: "SDI Health Care",
+  title: "Sunni Dawate Islami Health Care",
   description: "Comprehensive Health Management System for Administrators, Doctors, Staff, and Patients.",
 };
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 export default function RootLayout({
   children,
@@ -26,8 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontSans.variable} ${fontSignature.variable}`}>
       <body className="min-h-screen flex flex-col font-sans antialiased text-slate-900 bg-slate-50">
-        <Toaster position="top-right" />
-        {children}
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <Toaster position="top-right" />
+          <PushNotificationInitializer />
+          {children}
+         
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
