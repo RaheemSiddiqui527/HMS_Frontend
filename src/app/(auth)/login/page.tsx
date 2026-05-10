@@ -39,11 +39,27 @@ function AuthContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      const user = authService.getCurrentUser();
+      if (user && user.role) {
+        const roleRoutes: Record<string, string> = {
+          admin: '/admin',
+          doctor: '/doctor',
+          staff: '/staff',
+          patient: '/patient'
+        };
+        router.push(roleRoutes[user.role] || '/admin');
+        return;
+      }
+    }
+
     const mode = searchParams.get('mode');
     if (mode === 'signup') {
       setIsLoginMode(false);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const handleSocialLogin = async (provider: string) => {
     try {
