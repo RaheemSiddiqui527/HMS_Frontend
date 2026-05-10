@@ -18,6 +18,9 @@ const fontSignature = Dancing_Script({
 export const metadata = {
   title: "Sunni Dawate Islami Health Care",
   description: "Comprehensive Health Management System for Administrators, Doctors, Staff, and Patients.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
