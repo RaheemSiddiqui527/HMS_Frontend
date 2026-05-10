@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { User, Activity, Heart, Ruler, Scale, AlertCircle, Save, ChevronLeft, Phone, Mail, Calendar, FileText, ClipboardList } from 'lucide-react';
+import { User, Activity, Heart, Ruler, Scale, AlertCircle, Save, ChevronLeft, Phone, Mail, Calendar, FileText, ClipboardList, Shield } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
-import { adminService } from '../../../../services/admin.service';
+import { adminService } from '../../../../../services/admin.service';
 import { toast } from 'react-hot-toast';
 
 export default function DoctorPatientDetailPage() {
